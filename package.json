@@ -1,0 +1,21 @@
+{
+  "name": "minimal-react-app",
+  "version": "1.0.0",
+  "description": "Simplest possible React application",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "npm run build && gh-pages -d dist"
+  },
+  "dependencies": {
+    "react": "^19.2",
+    "react-dom": "^19.2"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "gh-pages": "^6.1.1"
+  }
+}
