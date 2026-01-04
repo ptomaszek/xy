@@ -1,0 +1,11 @@
+# IntelliJ IDEA project files
+.idea/
+*.iml
+
+# IDE temporary files
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
