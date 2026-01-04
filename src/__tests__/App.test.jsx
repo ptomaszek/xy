@@ -23,7 +23,6 @@ describe('App (Landing Page)', () => {
       
       // Check that menu items are present using link selectors
       expect(screen.getByRole('link', { name: 'Strona główna' })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'O nas' })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'Gra matematyczna' })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'Kontakt' })).toBeInTheDocument();
     });

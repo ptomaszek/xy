@@ -30,7 +30,6 @@ function AppContent() {
 
   const menuItems = [
     { text: 'Strona główna', path: '/' },
-    { text: 'O nas', path: '/games/about' },
     { text: 'Gra matematyczna', path: '/games/math' },
     { text: 'Kontakt', path: '/games/contact' }
   ];
@@ -65,15 +64,14 @@ function AppContent() {
     switch (location.pathname) {
       case '/games/math':
         return <MathGame />;
-      case '/games/about':
       case '/games/contact':
         return (
           <Container maxWidth="lg">
             <Typography variant="h4" gutterBottom>
-              {location.pathname === '/games/about' ? 'Strona o nas' : 'Strona kontaktowa'}
+              Strona kontaktowa
             </Typography>
             <Typography variant="body1">
-              To jest {location.pathname === '/games/about' ? 'treść strony o nas' : 'treść strony kontaktowej'}.
+              To jest treść strony kontaktowej.
             </Typography>
           </Container>
         );
