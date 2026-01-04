@@ -1,11 +1,3 @@
-# Jekyll generated files
-_site/
-.jekyll-cache/
-.jekyll-metadata
-
-# Ruby dependencies
-Gemfile.lock
-
 # IDE files
 .idea/
 .vscode/
