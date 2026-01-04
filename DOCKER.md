@@ -20,6 +20,9 @@ docker-compose up --build
 
 # Stop container (if running), rebuild image and start container in one go
 docker-compose down && docker-compose up --build
+
+# Run tests in Docker container
+docker-compose exec app npm test
 ```
 
 ## Production
