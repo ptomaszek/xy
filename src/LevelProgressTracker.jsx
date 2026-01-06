@@ -207,9 +207,9 @@ const LevelProgressTracker = forwardRef(({
                         variant="contained"
                         color="primary"
                         autoFocus
-                        sx={{ width: '100%' }}
+                        sx={{ width: '100%', fontSize: '1.2rem', textTransform: 'none' }}
                     >
-                        Restartuj poziom
+                        Spróbuję!
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -251,9 +251,9 @@ const LevelProgressTracker = forwardRef(({
                         onClick={resetLevel}
                         variant="outlined"
                         color="primary"
-                        sx={{ width: '45%', marginRight: '5%' }}
+                        sx={{ width: '45%', marginRight: '5%', fontSize: '1.0rem', textTransform: 'none' }}
                     >
-                        Zagraj ponownie
+                        Powtarzam
                     </Button>
                     <Button
                         onClick={() => {
@@ -263,9 +263,9 @@ const LevelProgressTracker = forwardRef(({
                         variant="contained"
                         color="success"
                         autoFocus
-                        sx={{ width: '45%' }}
+                        sx={{ width: '45%', fontSize: '1.2rem', textTransform: 'none' }}
                     >
-                        Następny poziom
+                        Idę dalej!
                     </Button>
                 </DialogActions>
             </Dialog>
