@@ -50,19 +50,14 @@ const buildLatexExpression = (numbers, operators) =>
 
 /* ===================== Component ===================== */
 
-function MathGame({config}) {
-    const {
-        level,
-        coefficients,
-        operations,
-        range,
-    } = config;
+function MathGame({ config }) {
+    const { level, coefficients, operations, range } = config;
 
     const [numbers, setNumbers] = useState([]);
     const [operators, setOperators] = useState([]);
     const [answer, setAnswer] = useState('');
     const [status, setStatus] = useState('idle'); // idle | correct | wrong
-    const [inputBg, setInputBg] = useState('white'); // input background
+    const [inputBg, setInputBg] = useState('white');
 
     const inputRef = useRef(null);
     const progressRef = useRef(null);
@@ -96,8 +91,7 @@ function MathGame({config}) {
                     current = Math.floor(Math.random() * (range + 1));
                     nums.push(current);
                 } else {
-                    const op =
-                        operations[Math.floor(Math.random() * operations.length)];
+                    const op = operations[Math.floor(Math.random() * operations.length)];
                     ops.push(op);
 
                     let n;
@@ -117,7 +111,7 @@ function MathGame({config}) {
         setOperators(ops);
         setAnswer('');
         setStatus('idle');
-        setInputBg('white'); // reset input background
+        setInputBg('white');
     }, [coefficients, operations, range]);
 
     /* ===================== Derived ===================== */
@@ -131,7 +125,7 @@ function MathGame({config}) {
         [numbers, operators]
     );
 
-    /* ===================== Handlers ===================== */
+    /* ===================== Submit ===================== */
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!answer) return;
@@ -145,7 +139,7 @@ function MathGame({config}) {
             setTimeout(generateQuestion, 800);
         } else {
             setStatus('wrong');
-            setInputBg('#f8d7da'); // red immediately
+            setInputBg('#f8d7da'); // red
             progressRef.current?.handleIncorrectAnswer();
             focusInput();
         }
@@ -170,7 +164,7 @@ function MathGame({config}) {
     }, [status]);
     ;
 
-    /* ===================== Effects ===================== */
+    /* ===================== Initial setup ===================== */
     useEffect(generateQuestion, [generateQuestion]);
     useEffect(focusInput, [numbers, operators, focusInput]);
 
@@ -184,24 +178,17 @@ function MathGame({config}) {
                     fontSize: '0.9rem',
                     fontStyle: 'italic',
                     color: '#555',
-                    mb: 3,
+                    mb: 5,
                     p: 1.5,
                     borderRadius: 2,
                     bgcolor: '#f0f4f8',
-                    width: 'fit-content',
-                    marginBottom: 5,
                 }}
             >
                 {generateLevelDescription(config, level)}
             </Box>
 
             {/* Progress Tracker outside question container */}
-            <Box
-                sx={{
-                    minWidth: 250,
-                    maxWidth: '90%',
-                }}
-            >
+            <Box sx={{ minWidth: 250, maxWidth: '90%' }}>
                 <LevelProgressTracker
                     ref={progressRef}
                     tasksToComplete={10}
@@ -210,29 +197,19 @@ function MathGame({config}) {
                     onNextLevel={handleNextLevel}
                 />
             </Box>
+
             {/* Math question + input + mark */}
-            <Box
-                component="form"
-                onSubmit={handleSubmit}
-                display="flex"
-                flexDirection="column"
-                alignItems="center"
-            >
-                {/* Question row */}
-                <Box
-                    display="flex"
-                    justifyContent="center"
-                    alignItems="center"
-                    gap={2}
-                    mb={2}
-                >
+            <Box component="form" onSubmit={handleSubmit} mt={3}>
+                <Box display="flex" alignItems="center" gap={2} mb={2}>
                     <Typography variant="h5">
-                        <InlineMath math={latexExpression}/>
+                        <InlineMath math={latexExpression} />
                     </Typography>
 
                     <TextField
                         ref={inputRef}
-                        type="number"
+                        type="tel"
+                        inputMode="numeric"             // Numeric keyboard on mobile
+                        pattern="[0-9]*"                // Restrict input to digits only
                         value={answer}
                         disabled={status === 'correct'}
                         onChange={(e) => setAnswer(e.target.value)}
@@ -246,13 +223,7 @@ function MathGame({config}) {
                     />
                 </Box>
 
-                <Box
-                    display="flex"
-                    justifyContent="center"
-                    position="relative" // parent must be relative for absolute positioning
-                    mt={1} // optional spacing from question row
-                >
-                    {/* Button */}
+                <Box display="flex" justifyContent="center">
                     <Button
                         type="submit"
                         variant="contained"
