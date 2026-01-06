@@ -1,4 +1,4 @@
-import React, {useState, useEffect, forwardRef, useImperativeHandle} from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -6,10 +6,10 @@ import {
     DialogActions,
     Button,
     Typography,
-    LinearProgress,
-    Box
+    Box,
+    Fade
 } from '@mui/material';
-import {Favorite} from '@mui/icons-material';
+import { Favorite } from '@mui/icons-material';
 
 /**
  * Reusable component for tracking level progress with configurable rules
@@ -37,16 +37,20 @@ const LevelProgressTracker = forwardRef(({
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [isLevelActive, setIsLevelActive] = useState(true);
 
+    // Delayed open states for fade-in effect
+    const [delayedFailureOpen, setDelayedFailureOpen] = useState(false);
+    const [delayedSuccessOpen, setDelayedSuccessOpen] = useState(false);
+
     // Reset level state
     const resetLevel = () => {
         setTaskCount(0);
         setMistakeCount(0);
         setShowFailureModal(false);
         setShowSuccessModal(false);
+        setDelayedFailureOpen(false);
+        setDelayedSuccessOpen(false);
         setIsLevelActive(true);
-        if (onLevelRestart) {
-            onLevelRestart();
-        }
+        if (onLevelRestart) onLevelRestart();
     };
 
     // Handle correct answer
@@ -57,12 +61,9 @@ const LevelProgressTracker = forwardRef(({
         setTaskCount(newTaskCount);
 
         if (newTaskCount >= tasksToComplete) {
-            // Level completed successfully
             setIsLevelActive(false);
             setShowSuccessModal(true);
-            if (onLevelComplete) {
-                onLevelComplete();
-            }
+            if (onLevelComplete) onLevelComplete();
         }
     };
 
@@ -74,15 +75,10 @@ const LevelProgressTracker = forwardRef(({
         setMistakeCount(newMistakeCount);
 
         if (newMistakeCount >= maxMistakes) {
-            // Level failed
             setIsLevelActive(false);
             setShowFailureModal(true);
         }
     };
-
-    // Progress calculation
-    const progress = Math.min(100, (taskCount / tasksToComplete) * 100);
-    const mistakesLeft = Math.max(0, maxMistakes - mistakeCount);
 
     // Expose methods to parent component via ref
     useImperativeHandle(ref, () => ({
@@ -91,12 +87,37 @@ const LevelProgressTracker = forwardRef(({
         resetLevel
     }), [handleCorrectAnswer, handleIncorrectAnswer, resetLevel]);
 
+    // Delay failure modal opening
+    useEffect(() => {
+        let timer;
+        if (showFailureModal) {
+            timer = setTimeout(() => setDelayedFailureOpen(true), 500);
+        } else {
+            setDelayedFailureOpen(false);
+        }
+        return () => clearTimeout(timer);
+    }, [showFailureModal]);
+
+    // Delay success modal opening
+    useEffect(() => {
+        let timer;
+        if (showSuccessModal) {
+            timer = setTimeout(() => setDelayedSuccessOpen(true), 500);
+        } else {
+            setDelayedSuccessOpen(false);
+        }
+        return () => clearTimeout(timer);
+    }, [showSuccessModal]);
+
+    // Progress calculation
+    const mistakesLeft = Math.max(0, maxMistakes - mistakeCount);
+
     return (
-        <div style={{position: 'relative'}}>
+        <div style={{ position: 'relative' }}>
             {/* Hearts (lives) */}
             <Box sx={{ mb: 1, display: 'flex', gap: 0.5 }}>
                 {Array.from({ length: maxMistakes }).map((_, index) => {
-                    const isLost = index >= mistakesLeft; // past mistakes
+                    const isLost = index >= mistakesLeft;
                     return (
                         <Favorite
                             key={index}
@@ -111,6 +132,7 @@ const LevelProgressTracker = forwardRef(({
                     );
                 })}
             </Box>
+
             {/* Chunked Progress Bar */}
             <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 {Array.from({ length: tasksToComplete }).map((_, index) => {
@@ -119,7 +141,7 @@ const LevelProgressTracker = forwardRef(({
                         <Box
                             key={index}
                             sx={{
-                                flex: 1,           // each chunk takes equal space
+                                flex: 1,
                                 height: 12,
                                 borderRadius: 2,
                                 backgroundColor: isCompleted ? '#2196f3' : '#e0e0e0',
@@ -130,74 +152,64 @@ const LevelProgressTracker = forwardRef(({
                 })}
             </Box>
 
-
-            {/* Child content - will be blocked by overlay when modal is shown */}
+            {/* Child content - blocked when modal is visible */}
             <div style={{
                 position: 'relative',
                 opacity: showFailureModal || showSuccessModal ? 0.3 : 1,
-                pointerEvents: (showFailureModal || showSuccessModal) ? 'none' : 'auto'
+                pointerEvents: showFailureModal || showSuccessModal ? 'none' : 'auto'
             }}>
                 {children}
             </div>
 
-            {/* Failure Modal - shown when max mistakes reached */}
+            {/* Failure Modal */}
             <Dialog
-                open={showFailureModal}
-                onClose={() => {
-                }}
+                open={delayedFailureOpen}
+                onClose={() => {}}
+                TransitionComponent={Fade}
+                transitionDuration={500}
                 aria-labelledby="failure-modal-title"
                 aria-describedby="failure-modal-description"
             >
-                <DialogTitle id="failure-modal-title" sx={{color: 'error.main'}}>
+                <DialogTitle id="failure-modal-title" sx={{ color: 'error.main' }}>
                     Koniec gry
                 </DialogTitle>
                 <DialogContent>
-                    <Typography id="failure-modal-description" sx={{mt: 1}}>
+                    <Typography id="failure-modal-description" sx={{ mt: 1 }}>
                         Przekroczyłeś limit błędów ({maxMistakes}). Musisz zrestartować poziom.
                     </Typography>
                 </DialogContent>
                 <DialogActions>
-                    <Button
-                        onClick={resetLevel}
-                        variant="contained"
-                        color="primary"
-                        autoFocus
-                    >
+                    <Button onClick={resetLevel} variant="contained" color="primary" autoFocus>
                         Restartuj poziom
                     </Button>
                 </DialogActions>
             </Dialog>
 
-            {/* Success Modal - shown when all tasks completed */}
+            {/* Success Modal */}
             <Dialog
-                open={showSuccessModal}
-                onClose={() => {
-                }}
+                open={delayedSuccessOpen}
+                onClose={() => {}}
+                TransitionComponent={Fade}
+                transitionDuration={500}
                 aria-labelledby="success-modal-title"
                 aria-describedby="success-modal-description"
             >
-                <DialogTitle id="success-modal-title" sx={{color: 'success.main'}}>
+                <DialogTitle id="success-modal-title" sx={{ color: 'success.main' }}>
                     Gratulacje! 🎉
                 </DialogTitle>
                 <DialogContent>
-                    <Typography id="success-modal-description" sx={{mt: 1}}>
+                    <Typography id="success-modal-description" sx={{ mt: 1 }}>
                         Poziom ukończony!
                     </Typography>
                 </DialogContent>
-                <DialogActions sx={{justifyContent: 'space-between'}}>
-                    <Button
-                        onClick={resetLevel}
-                        variant="outlined"
-                        color="primary"
-                    >
+                <DialogActions sx={{ justifyContent: 'space-between' }}>
+                    <Button onClick={resetLevel} variant="outlined" color="primary">
                         Zagraj ponownie
                     </Button>
                     <Button
                         onClick={() => {
                             resetLevel();
-                            if (onNextLevel) {
-                                onNextLevel();
-                            }
+                            if (onNextLevel) onNextLevel();
                         }}
                         variant="contained"
                         color="success"
