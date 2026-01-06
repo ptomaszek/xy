@@ -27,9 +27,11 @@ const gameConfig = {
         title: 'Matematyka',
         path: '/games/math',
         levels: [
+            { coefficients: 2, operations: ['+', '-'], range: 10 },
             { coefficients: 2, operations: ['+', '-'], range: 20 },
+            { coefficients: 3, operations: ['+', '-'], range: 10 },
             { coefficients: 3, operations: ['+', '-'], range: 20 },
-            { coefficients: 2, operations: ['*'], range: 20 }
+            { coefficients: 2, operations: ['*'], range: 10 }
         ]
     }
 };

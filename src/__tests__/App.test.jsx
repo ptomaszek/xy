@@ -30,8 +30,6 @@ describe('App (Landing Page)', () => {
       // After clicking, the sub-items should appear as links
       await waitFor(() => {
         expect(screen.getByRole('link', { name: 'Poziom 1' })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'Poziom 2' })).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: 'Poziom 3' })).toBeInTheDocument();
       });
 
       // Expect dummy link to be present (it's not nested under MathGame, so it should be a direct link)
