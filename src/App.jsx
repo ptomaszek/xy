@@ -19,7 +19,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { HashRouter as Router, useLocation, useNavigate, Link as RouterLink, Routes, Route } from 'react-router-dom';
-import MathGame from './MathGame';
+import MathGame from './games/math/MathGame';
 
 // Centralized game configuration - focus on actual game parameters only
 const gameConfig = {

@@ -12,7 +12,8 @@ import Typography from '@mui/material/Typography';
 import {useNavigate} from 'react-router-dom';
 import {InlineMath} from 'react-katex';
 import 'katex/dist/katex.min.css';
-import LevelProgressTracker from './LevelProgressTracker';
+import LevelProgressTracker from '../../LevelProgressTracker';
+import QuestionGenerator from './QuestionGenerator';
 
 /* ===================== Helpers ===================== */
 const generateLevelDescription = (config, levelNumber) => {
@@ -53,8 +54,6 @@ const buildLatexExpression = (numbers, operators) =>
 function MathGame({ config }) {
     const { level, coefficients, operations, range } = config;
 
-    const [numbers, setNumbers] = useState([]);
-    const [operators, setOperators] = useState([]);
     const [answer, setAnswer] = useState('');
     const [status, setStatus] = useState('idle'); // idle | correct | wrong
     const [inputBg, setInputBg] = useState('white');
@@ -71,59 +70,18 @@ function MathGame({ config }) {
     }, []);
 
     /* ===================== Question Generation ===================== */
-    const generateQuestion = useCallback(() => {
-        let nums = [];
-        let ops = [];
-        let current = 0;
-
-        if (operations.includes('*')) {
-            const a = Math.floor(Math.random() * (range + 1));
-            const b =
-                a === 0
-                    ? Math.floor(Math.random() * (range + 1))
-                    : Math.floor(Math.random() * (Math.floor(range / a) + 1));
-
-            nums = [a, b];
-            ops = ['*'];
-        } else {
-            for (let i = 0; i < coefficients; i++) {
-                if (i === 0) {
-                    current = Math.floor(Math.random() * (range + 1));
-                    nums.push(current);
-                } else {
-                    const op = operations[Math.floor(Math.random() * operations.length)];
-                    ops.push(op);
-
-                    let n;
-                    if (op === '+') {
-                        n = Math.floor(Math.random() * (range - current + 1));
-                        current += n;
-                    } else {
-                        n = Math.floor(Math.random() * (current + 1));
-                        current -= n;
-                    }
-                    nums.push(n);
-                }
-            }
+    const questionGenerator = QuestionGenerator({
+        coefficients,
+        operations,
+        range,
+        onQuestionGenerated: () => {
+            setAnswer('');
+            setStatus('idle');
+            setInputBg('white');
         }
+    });
 
-        setNumbers(nums);
-        setOperators(ops);
-        setAnswer('');
-        setStatus('idle');
-        setInputBg('white');
-    }, [coefficients, operations, range]);
-
-    /* ===================== Derived ===================== */
-    const correctAnswer = useMemo(
-        () => calculateResult(numbers, operators),
-        [numbers, operators]
-    );
-
-    const latexExpression = useMemo(
-        () => buildLatexExpression(numbers, operators),
-        [numbers, operators]
-    );
+    const { numbers, operators, correctAnswer, latexExpression, generateQuestion } = questionGenerator;
 
     /* ===================== Submit ===================== */
     const handleSubmit = (e) => {
@@ -172,8 +130,13 @@ function MathGame({ config }) {
     }, [status]);
 
     /* ===================== Initial setup ===================== */
-    useEffect(generateQuestion, [generateQuestion]);
-    useEffect(focusInput, [numbers, operators, focusInput]);
+    useEffect(() => {
+        generateQuestion();
+    }, []); // Only run once on mount
+    
+    useEffect(() => {
+        focusInput();
+    }, [numbers, operators, focusInput]);
 
     /* ===================== Render ===================== */
     return (
