@@ -1,9 +1,8 @@
 // src/games/math/MathQuestion.js
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { TextField, Button, Box, Typography } from '@mui/material';
-import { InlineMath } from 'react-katex';
-import 'katex/dist/katex.min.css';
 import QuestionGenerator from './QuestionGenerator';
+import KaTeXComponents from './KaTeXComponents';
 
 function MathQuestion({ config, progressRef }) {
     const { coefficients, operations, range } = config;
@@ -98,7 +97,7 @@ function MathQuestion({ config, progressRef }) {
         >
             <Box display="flex" alignItems="center" gap={2} mb={2}>
                 <Typography variant="h5">
-                    <InlineMath math={latexExpression} />
+                    <KaTeXComponents math={latexExpression} />
                 </Typography>
 
                 <TextField
