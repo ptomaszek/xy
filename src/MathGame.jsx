@@ -210,6 +210,10 @@ function MathGame({ config }) {
                         type="tel"
                         inputMode="numeric"             // Numeric keyboard on mobile
                         pattern="[0-9]*"                // Restrict input to digits only
+                        autoComplete="off"              // Disable autofill
+                        autoCorrect="off"               // Disable autocorrect
+                        autoCapitalize="off"            // Disable autocapitalize
+                        spellCheck="false"              // Disable spell check
                         value={answer}
                         disabled={status === 'correct'}
                         onChange={(e) => setAnswer(e.target.value)}

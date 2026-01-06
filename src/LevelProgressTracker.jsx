@@ -114,7 +114,7 @@ const LevelProgressTracker = forwardRef(({
     return (
         <div style={{ position: 'relative' }}>
             {/* Hearts (lives) */}
-            <Box sx={{ mb: 1, display: 'flex', gap: 0.5 }}>
+            <Box sx={{ mb: 4, display: 'flex', gap: 0.5 }}>
                 {Array.from({ length: maxMistakes }).map((_, index) => {
                     const isLost = index >= mistakesLeft;
                     return (
