@@ -150,9 +150,14 @@ function MathGame({ config }) {
 
     const handleNextLevel = () => {
         const path = window.location.hash;
-        if (path.includes('/levels/1')) navigate('/games/math/levels/2');
-        else if (path.includes('/levels/2')) navigate('/games/math/levels/3');
-        else navigate('/games/math');
+        const levelMatch = path.match(/\/levels\/(\d+)/);
+        if (levelMatch) {
+            const currentLevel = parseInt(levelMatch[1]);
+            const nextLevel = currentLevel + 1;
+            navigate(`/games/math/levels/${nextLevel}`, { replace: true });
+        } else {
+            navigate('/games/math', { replace: true });
+        }
     };
 
     /* ===================== Fade red background effect ===================== */
@@ -194,7 +199,7 @@ function MathGame({ config }) {
                 <LevelProgressTracker
                     key={`level-${level}`} // Force remount when level changes
                     ref={progressRef}
-                    tasksToComplete={10}
+                    tasksToComplete={2}
                     maxMistakes={3}
                     onLevelRestart={generateQuestion}
                     onNextLevel={handleNextLevel}
