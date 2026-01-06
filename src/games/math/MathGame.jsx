@@ -1,117 +1,20 @@
-import React, {
-    useState,
-    useEffect,
-    useRef,
-    useCallback,
-} from 'react';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
+// src/games/math/MathGame.js
+import React, { useRef, useState } from 'react';
+import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { InlineMath } from 'react-katex';
-import 'katex/dist/katex.min.css';
+import LevelInfo from './LevelInfo';
 import LevelProgressTracker from '../../LevelProgressTracker';
-import QuestionGenerator from './QuestionGenerator';
+import MathQuestion from './MathQuestion';
 
-/* ===================== Helpers ===================== */
-const generateLevelDescription = (config, levelNumber) => {
-    const { coefficients, operations, range } = config;
-
-    const operationNames = {
-        '+': 'Dodawanie',
-        '-': 'Odejmowanie',
-        '*': 'Mnożenie',
-    };
-
-    const uniqueOperations = [...new Set(operations)];
-    const operationText = uniqueOperations.map(op => operationNames[op]).join(', ');
-
-    return `Poziom ${levelNumber}: ${operationText} w zakresie ${range}`;
-};
-
-const calculateResult = (numbers, operators) =>
-    operators.reduce((result, op, i) => {
-        const next = numbers[i + 1];
-        if (op === '+') return result + next;
-        if (op === '-') return result - next;
-        if (op === '*') return result * next;
-        return result;
-    }, numbers[0] ?? 0);
-
-const buildLatexExpression = (numbers, operators) =>
-    numbers
-        .flatMap((n, i) =>
-            i < operators.length
-                ? [n, operators[i] === '*' ? '\\times' : operators[i]]
-                : [n]
-        )
-        .join(' ') + ' =';
-
-/* ===================== Component ===================== */
 function MathGame({ config }) {
-    const { level, coefficients, operations, range } = config;
-
-    const [answer, setAnswer] = useState('');
-    const [status, setStatus] = useState('idle'); // idle | correct | wrong
-    const [inputBg, setInputBg] = useState('white');
-    const [fade, setFade] = useState(true); // fade-in/out state
-
-    const inputRef = useRef(null);
+    const { level } = config;
     const progressRef = useRef(null);
     const navigate = useNavigate();
 
-    /* ===================== Focus ===================== */
-    const focusInput = useCallback(() => {
-        const input = inputRef.current?.querySelector('input');
-        input?.focus();
-        input?.select();
-    }, []);
+    // Signal to tell MathQuestion to generate a new question
+    const [restartSignal, setRestartSignal] = useState(0);
 
-    /* ===================== Question Generation ===================== */
-    const questionGenerator = QuestionGenerator({
-        coefficients,
-        operations,
-        range,
-        onQuestionGenerated: () => {
-            setAnswer('');
-            setStatus('idle');
-            setInputBg('white');
-        }
-    });
-
-    const { numbers, operators, correctAnswer, latexExpression, generateQuestion } = questionGenerator;
-
-    /* ===================== Submit ===================== */
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!answer) return;
-
-        const userAnswer = parseInt(answer, 10);
-
-        if (userAnswer === correctAnswer) {
-            setStatus('correct');
-            setInputBg('#d4edda'); // green for correct
-            progressRef.current?.handleCorrectAnswer();
-
-            setTimeout(() => {
-                // fade out
-                setFade(false);
-
-                setTimeout(() => {
-                    generateQuestion(); // change question while hidden
-                    setFade(true); // fade in
-                    focusInput();
-                }, 250); // fade duration
-            }, 600);
-        } else {
-            setStatus('wrong');
-            setInputBg('#f8d7da'); // red
-            progressRef.current?.handleIncorrectAnswer();
-            focusInput();
-        }
-    };
-
+    /* ===================== Handle next level ===================== */
     const handleNextLevel = () => {
         const path = window.location.hash;
         const levelMatch = path.match(/\/levels\/(\d+)/);
@@ -124,117 +27,32 @@ function MathGame({ config }) {
         }
     };
 
-    /* ===================== Fade red background effect ===================== */
-    useEffect(() => {
-        if (status !== 'idle') {
-            const timer = setTimeout(() => {
-                setInputBg('white'); // fade input back
-                setStatus('idle'); // reset status
-            }, 1000);
-            return () => clearTimeout(timer);
-        }
-    }, [status]);
-
-    /* ===================== Initial setup ===================== */
-    useEffect(() => {
-        generateQuestion();
-    }, []); // Only run once on mount
-
-    useEffect(() => {
-        focusInput();
-    }, [numbers, operators, focusInput]);
-
-    /* ===================== Render ===================== */
     return (
         <Box display="flex" flexDirection="column" alignItems="center" mt={4} px={2}>
+            {/* Level description */}
+            <LevelInfo config={config} level={level} />
 
-            {/* Level Info */}
-            <Box
-                sx={{
-                    fontSize: '0.9rem',
-                    fontStyle: 'italic',
-                    color: '#555',
-                    mb: 5,
-                    p: 1.5,
-                    borderRadius: 2,
-                    bgcolor: '#f0f4f8',
-                }}
-            >
-                {generateLevelDescription(config, level)}
-            </Box>
-
-            {/* Progress Tracker outside question container */}
+            {/* Progress Tracker */}
             <Box sx={{ minWidth: 250, maxWidth: '90%' }}>
                 <LevelProgressTracker
-                    key={`level-${level}`} // Force remount when level changes
+                    key={`level-${level}`} // force remount on level change
                     ref={progressRef}
                     tasksToComplete={2}
                     maxMistakes={3}
-                    onLevelRestart={generateQuestion}
+                    onLevelRestart={() => {
+                        // Just signal MathQuestion to generate a new question
+                        setRestartSignal(prev => prev + 1);
+                    }}
                     onNextLevel={handleNextLevel}
                 />
             </Box>
 
-            {/* Math question + input + mark */}
-            <Box
-                component="form"
-                onSubmit={handleSubmit}
-                mt={3}
-                sx={{
-                    opacity: fade ? 1 : 0,
-                    transform: fade ? 'scale(1)' : 'scale(0.98)',
-                    transition: 'opacity 250ms ease, transform 250ms ease',
-                }}
-            >
-                <Box display="flex" alignItems="center" gap={2} mb={2}>
-                    <Typography variant="h5">
-                        <InlineMath math={latexExpression} />
-                    </Typography>
-
-                    <TextField
-                        ref={inputRef}
-                        type="tel"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        value={answer}
-                        disabled={status === 'correct'}
-                        onChange={(e) => setAnswer(e.target.value)}
-                        sx={{
-                            width: 70,
-                            '& .MuiOutlinedInput-root': {
-                                bgcolor: inputBg,
-                                transition: 'background-color 0.5s ease',
-                            },
-                        }}
-                    />
-                </Box>
-
-                <Box display="flex" justifyContent="center">
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        disabled={status === 'correct' || !answer}
-                        sx={{
-                            px: 4,
-                            py: 1.5,
-                            fontSize: '1rem',
-                            bgcolor: status === 'correct' ? '#9cc7a3' : '#007bff',
-                            '&:hover': {
-                                bgcolor: status === 'correct' ? '#9cc7a3' : '#0056b3',
-                            },
-                            color: 'white',
-                            borderRadius: 2,
-                            transition: 'all 0.2s ease',
-                        }}
-                    >
-                        Zatwierdź
-                    </Button>
-                </Box>
-            </Box>
+            {/* Math Question */}
+            <MathQuestion
+                key={restartSignal} // ensures a fresh question on restart
+                config={config}
+                progressRef={progressRef}
+            />
         </Box>
     );
 }
