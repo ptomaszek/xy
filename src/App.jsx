@@ -21,16 +21,30 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import { HashRouter as Router, useLocation, useNavigate, Link as RouterLink, Routes, Route } from 'react-router-dom';
 import MathGame from './MathGame';
 
-// Centralized menu config with nesting support
+// Centralized game configuration - focus on actual game parameters only
+const gameConfig = {
+    math: {
+        title: 'Matematyka',
+        path: '/games/math',
+        levels: [
+            { coefficients: 2, operations: ['+', '-'], range: 20 },
+            { coefficients: 3, operations: ['+', '-'], range: 20 },
+            { coefficients: 2, operations: ['*'], range: 20 }
+        ]
+    }
+};
+
+// Auto-generate menu items from game configuration
 const menuItems = [
     {
-        text: 'Matematyka',
-        path: '/games/math',
-        subitems: [
-            { id: 1, text: 'Poziom 1', path: '/games/math/levels/1', config: { coefficients: 2, operations: ['+', '-'], range: 20 } },
-            { id: 2, text: 'Poziom 2', path: '/games/math/levels/2', config: { coefficients: 3, operations: ['+', '-'], range: 20 } },
-            { id: 3, text: 'Poziom 3', path: '/games/math/levels/3', config: { coefficients: 2, operations: ['*'], range: 20 } }
-        ]
+        text: gameConfig.math.title,
+        path: gameConfig.math.path,
+        subitems: gameConfig.math.levels.map((config, index) => ({
+            id: index + 1,
+            text: `Poziom ${index + 1}`,
+            path: `${gameConfig.math.path}/levels/${index + 1}`,
+            config: config
+        }))
     },
     { text: 'Dummy', path: '/games/dummy' }
 ];
