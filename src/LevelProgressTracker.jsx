@@ -152,8 +152,8 @@ const LevelProgressTracker = forwardRef(({
                                 flex: 1,
                                 height: 12,
                                 borderRadius: 2,
-                                backgroundColor: isCompleted ? '#2196f3' : '#e0e0e0',
-                                transition: 'background-color 0.8s',
+                                backgroundColor: isCompleted ? '#4caf50' : '#e0e0e0',
+                                transition: 'background-color 0.3s',
                             }}
                         />
                     );
@@ -178,16 +178,37 @@ const LevelProgressTracker = forwardRef(({
                 aria-labelledby="failure-modal-title"
                 aria-describedby="failure-modal-description"
             >
-                <DialogTitle id="failure-modal-title" sx={{ color: 'error.main' }}>
+                <DialogTitle
+                    id="failure-modal-title"
+                    sx={{
+                        color: 'error.main',
+                        fontWeight: 'bold',  // Standardized font weight for both titles
+                        textAlign: 'center' // Consistent title alignment
+                    }}
+                >
                     Koniec gry
                 </DialogTitle>
                 <DialogContent>
-                    <Typography id="failure-modal-description" sx={{ mt: 1 }}>
-                        Przekroczyłeś limit błędów ({maxMistakes}). Musisz zrestartować poziom.
+                    <Typography
+                        id="failure-modal-description"
+                        sx={{
+                            mt: 1,
+                            textAlign: 'center', // Make sure the description is centered
+                            fontSize: '1rem', // Same font size for both dialogs
+                            color: 'text.primary' // Standard text color for both dialogs
+                        }}
+                    >
+                        Musisz zrestartować poziom.
                     </Typography>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={resetLevel} variant="contained" color="primary" autoFocus>
+                <DialogActions sx={{ justifyContent: 'center' }}>  {/* Center buttons for uniformity */}
+                    <Button
+                        onClick={resetLevel}
+                        variant="contained"
+                        color="primary"
+                        autoFocus
+                        sx={{ width: '100%' }}
+                    >
                         Restartuj poziom
                     </Button>
                 </DialogActions>
@@ -202,16 +223,36 @@ const LevelProgressTracker = forwardRef(({
                 aria-labelledby="success-modal-title"
                 aria-describedby="success-modal-description"
             >
-                <DialogTitle id="success-modal-title" sx={{ color: 'success.main' }}>
-                    Gratulacje! 🎉
+                <DialogTitle
+                    id="success-modal-title"
+                    sx={{
+                        color: 'success.main',
+                        fontWeight: 'bold',  // Standardized font weight
+                        textAlign: 'center' // Consistent title alignment
+                    }}
+                >
+                    Brawo! 🎉
                 </DialogTitle>
                 <DialogContent>
-                    <Typography id="success-modal-description" sx={{ mt: 1 }}>
+                    <Typography
+                        id="success-modal-description"
+                        sx={{
+                            mt: 1,
+                            textAlign: 'center', // Center the description
+                            fontSize: '1rem', // Same font size as the failure modal
+                            color: 'text.primary' // Standard text color
+                        }}
+                    >
                         Poziom ukończony!
                     </Typography>
                 </DialogContent>
-                <DialogActions sx={{ justifyContent: 'space-between' }}>
-                    <Button onClick={resetLevel} variant="outlined" color="primary">
+                <DialogActions sx={{ justifyContent: 'center' }}>
+                    <Button
+                        onClick={resetLevel}
+                        variant="outlined"
+                        color="primary"
+                        sx={{ width: '45%', marginRight: '5%' }}
+                    >
                         Zagraj ponownie
                     </Button>
                     <Button
@@ -222,6 +263,7 @@ const LevelProgressTracker = forwardRef(({
                         variant="contained"
                         color="success"
                         autoFocus
+                        sx={{ width: '45%' }}
                     >
                         Następny poziom
                     </Button>
