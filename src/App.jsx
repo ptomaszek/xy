@@ -15,9 +15,6 @@ import {
     ListItemButton,
     Collapse
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
 import { HashRouter as Router, useLocation, useNavigate, Link as RouterLink, Routes, Route } from 'react-router-dom';
 import MathGame from './games/math/MathGame';
 
@@ -89,7 +86,7 @@ const MenuItem = ({ item, depth = 0, onItemClick, activePath }) => {
                             fontWeight: hasSubitems ? 'bold' : 'normal'
                         }}
                     />
-                    {hasSubitems ? (open ? <ExpandLess /> : <ExpandMore />) : null}
+                    {hasSubitems ? (open ? '▲' : '▼') : null}
                 </ListItemButton>
             </ListItem>
             {hasSubitems && (
@@ -199,7 +196,7 @@ function AppContent() {
                         onClick={handleDrawerToggle}
                         sx={{ mr: 2, display: { md: 'none' } }}
                     >
-                        <MenuIcon />
+                        ☰
                     </IconButton>
                     <Typography
                         variant="h6"

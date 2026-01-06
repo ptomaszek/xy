@@ -21,7 +21,7 @@ describe('App (Landing Page)', () => {
       
       // Expect the main "Matematyka" button to be present.
       // Since there are two instances (drawer and main content), use getAllByRole.
-      const mathGameButtons = screen.getAllByRole('button', { name: 'Matematyka' });
+      const mathGameButtons = screen.getAllByRole('button', { name: 'Matematyka ▲' });
       expect(mathGameButtons.length).toBeGreaterThanOrEqual(1); // Ensure at least one button is found
       
       // Click the first found button to expand sub-items
