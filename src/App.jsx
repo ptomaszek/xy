@@ -58,7 +58,7 @@ const menuItems = [
 const MenuItem = ({ item, depth = 0, onItemClick, activePath }) => {
     const theme = useTheme();
     const navigate = useNavigate();
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(true);
     const hasSubitems = item.subitems && item.subitems.length > 0;
     const isActive = activePath === item.path;
 

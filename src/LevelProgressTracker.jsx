@@ -198,7 +198,7 @@ const LevelProgressTracker = forwardRef(({
                             color: 'text.primary' // Standard text color for both dialogs
                         }}
                     >
-                        Musisz zrestartować poziom.
+                        Zacznij jeszcze raz 🍀
                     </Typography>
                 </DialogContent>
                 <DialogActions sx={{ justifyContent: 'center' }}>  {/* Center buttons for uniformity */}

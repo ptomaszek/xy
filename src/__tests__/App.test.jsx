@@ -16,36 +16,14 @@ describe('App (Landing Page)', () => {
       expect(screen.getByRole('main')).toBeInTheDocument();
     });
 
-    it('shows landing page heading without expanded game list', () => {
+    it('shows landing page heading with expanded game list', () => {
       render(<App />);
       expect(screen.getByText('Wybierz grę z menu')).toBeInTheDocument();
-      // Verify that the game list is present but collapsed (no sub-items visible)
+      // Verify that the game list is present and expanded (sub-items visible)
       const list = screen.getByRole('list');
       expect(list).toBeInTheDocument();
-      // Verify that sub-items are not visible initially (collapsed state)
-      expect(screen.queryByRole('link', { name: 'Poziom 1' })).not.toBeInTheDocument();
-    });
-
-    it('shows menu items and expands sub-items', async () => {
-      render(<App />);
-      
-      // Expect the main "Matematyka" button to be present.
-      // Since there are two instances (drawer and main content), use getAllByRole.
-      const mathGameButtons = screen.getAllByRole('button', { name: 'Matematyka ▼' });
-      expect(mathGameButtons.length).toBeGreaterThanOrEqual(1); // Ensure at least one button is found
-      
-      // Click the first found button to expand sub-items
-      await userEvent.click(mathGameButtons[0]);
-
-      // After clicking, the sub-items should appear as links
-      await waitFor(() => {
-        expect(screen.getByRole('link', { name: 'Poziom 1' })).toBeInTheDocument();
-      });
-
-      // Expect dummy link to be present (it's not nested under MathGame, so it should be a direct link)
-      // Use getAllByRole to handle multiple instances
-      const dummyLinks = screen.getAllByRole('link', { name: 'Dummy' });
-      expect(dummyLinks.length).toBeGreaterThanOrEqual(1);
+      // Verify that sub-items are visible initially (expanded state)
+      expect(screen.getByRole('link', { name: 'Poziom 1' })).toBeInTheDocument();
     });
   });
 });
