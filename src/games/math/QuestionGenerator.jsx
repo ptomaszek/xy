@@ -20,39 +20,60 @@ function QuestionGenerator({ coefficients, operations, range, onQuestionGenerate
     const generateQuestion = useCallback(() => {
         if (disabled) return;
 
+        // 50% chance to enforce non-trivial generation
+        const enforceNonTrivial = Math.random() < 0.5;
+        let attempts = 0;
+        const maxAttempts = 50; // Safety limit to prevent infinite loops
+
         let nums = [];
         let ops = [];
         let current = 0;
+        let isValidQuestion = false;
 
-        if (operations.includes('*')) {
-            const a = getRandomNumber(range);
-            const b =
-                a === 0
-                    ? getRandomNumber(range)
-                    : getRandomNumber(Math.floor(range / a));
+        while (!isValidQuestion && attempts < maxAttempts) {
+            nums = [];
+            ops = [];
+            current = 0;
 
-            nums = [a, b];
-            ops = ['*'];
-        } else {
-            for (let i = 0; i < coefficients; i++) {
-                if (i === 0) {
-                    current = getRandomNumber(range);
-                    nums.push(current);
-                } else {
-                    const op = operations[Math.floor(Math.random() * operations.length)];
-                    ops.push(op);
+            if (operations.includes('*')) {
+                // For multiplication, handle trivial cases
+                const a = getRandomNumber(range, enforceNonTrivial);
+                const b = a === 0
+                    ? getRandomNumber(range, enforceNonTrivial)
+                    : getRandomNumber(Math.floor(range / a), enforceNonTrivial);
 
-                    let n;
-                    if (op === '+') {
-                        n = getRandomNumber(range - current);
-                        current += n;
+                nums = [a, b];
+                ops = ['*'];
+            } else {
+                for (let i = 0; i < coefficients; i++) {
+                    if (i === 0) {
+                        current = getRandomNumber(range, enforceNonTrivial);
+                        nums.push(current);
                     } else {
-                        n = getRandomNumber(current);
-                        current -= n;
+                        const op = operations[Math.floor(Math.random() * operations.length)];
+                        ops.push(op);
+
+                        let n;
+                        if (op === '+') {
+                            n = getRandomNumber(range - current, enforceNonTrivial);
+                            current += n;
+                        } else {
+                            n = getRandomNumber(current, enforceNonTrivial);
+                            current -= n;
+                        }
+                        nums.push(n);
                     }
-                    nums.push(n);
                 }
             }
+
+            // Check if the final answer is trivial (0) when enforcing non-trivial
+            const finalAnswer = calculateResult(nums, ops);
+            if (enforceNonTrivial && finalAnswer === 0) {
+                attempts++;
+                continue; // Regenerate if answer is 0 and we're enforcing non-trivial
+            }
+
+            isValidQuestion = true;
         }
 
         setNumbers(nums);
@@ -89,9 +110,31 @@ function QuestionGenerator({ coefficients, operations, range, onQuestionGenerate
 /**
  * Generate a random number within the specified range
  * @param {number} range - Maximum value for the random number
- * @returns {number} Random number between 0 and range (inclusive)
+ * @param {boolean} excludeTrivial - Whether to exclude 0 and 1 (trivial cases)
+ * @returns {number} Random number between 0 and range (inclusive), optionally excluding trivial cases
  */
-const getRandomNumber = (range) => Math.floor(Math.random() * (range + 1));
+const getRandomNumber = (range, excludeTrivial = false) => {
+    let num;
+    let attempts = 0;
+    const maxAttempts = 100; // Safety limit to prevent infinite loops
+    
+    do {
+        num = Math.floor(Math.random() * (range + 1));
+        attempts++;
+        
+        // If not excluding trivial cases, or if the number is not trivial, accept it
+        if (!excludeTrivial || (num !== 0 && num !== 1)) {
+            break;
+        }
+        
+        // Safety check to prevent infinite loops in edge cases
+        if (attempts >= maxAttempts) {
+            break;
+        }
+    } while (excludeTrivial && (num === 0 || num === 1));
+    
+    return num;
+};
 
 /**
  * Calculate the result of a math expression given numbers and operators
