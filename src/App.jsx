@@ -254,9 +254,8 @@ function AppContent() {
                         element={
                             <Container maxWidth="lg">
                                 <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
-                                    Dostępne gry:
+                                    Wybierz grę z menu
                                 </Typography>
-                                <MenuList activePath={location.pathname} />
                             </Container>
                         }
                     />

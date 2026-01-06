@@ -16,6 +16,13 @@ describe('App (Landing Page)', () => {
       expect(screen.getByRole('main')).toBeInTheDocument();
     });
 
+    it('shows landing page heading without game list', () => {
+      render(<App />);
+      expect(screen.getByText('Wybierz grę z menu')).toBeInTheDocument();
+      // Verify that the game list is not shown on the landing page
+      expect(screen.queryByRole('list')).not.toBeInTheDocument();
+    });
+
     it('shows menu items and expands sub-items', async () => {
       render(<App />);
       
