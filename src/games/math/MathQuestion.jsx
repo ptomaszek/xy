@@ -10,6 +10,7 @@ function MathQuestion({ config, progressRef }) {
     const [answer, setAnswer] = useState('');
     const [status, setStatus] = useState('idle'); // idle | correct | wrong
     const [inputBg, setInputBg] = useState('white');
+    const [buttonBg, setButtonBg] = useState('#007bff');
     const [fade, setFade] = useState(true);
 
     const inputRef = useRef(null);
@@ -30,6 +31,7 @@ function MathQuestion({ config, progressRef }) {
             setAnswer('');
             setStatus('idle');
             setInputBg('white');
+            setButtonBg('#007bff');
         },
     });
 
@@ -45,6 +47,7 @@ function MathQuestion({ config, progressRef }) {
         if (userAnswer === correctAnswer) {
             setStatus('correct');
             setInputBg('#d4edda'); // green
+            setButtonBg('#9cc7a3'); // green
             progressRef.current?.handleCorrectAnswer();
 
             setTimeout(() => {
@@ -58,16 +61,18 @@ function MathQuestion({ config, progressRef }) {
         } else {
             setStatus('wrong');
             setInputBg('#f8d7da'); // red
+            setButtonBg('#f5c6cb'); // red
             progressRef.current?.handleIncorrectAnswer();
             focusInput();
         }
     };
 
-    /* ===================== Fade red background back ===================== */
+    /* ===================== Fade background back ===================== */
     useEffect(() => {
-        if (status !== 'idle') {
+        if (status === 'wrong') {
             const timer = setTimeout(() => {
                 setInputBg('white');
+                setButtonBg('#007bff');
                 setStatus('idle');
             }, 1000);
             return () => clearTimeout(timer);
@@ -128,12 +133,11 @@ function MathQuestion({ config, progressRef }) {
                 <Button
                     type="submit"
                     variant="contained"
-                    disabled={status === 'correct' || !answer}
                     sx={{
                         px: 4,
                         py: 1.5,
                         fontSize: '1rem',
-                        bgcolor: status === 'correct' ? '#9cc7a3' : '#007bff',
+                        bgcolor: buttonBg,
                         '&:hover': {
                             bgcolor: status === 'correct' ? '#9cc7a3' : '#0056b3',
                         },
