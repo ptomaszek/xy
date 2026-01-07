@@ -175,6 +175,8 @@ const LevelProgressTracker = forwardRef(({
                 onClose={() => {}}
                 TransitionComponent={Fade}
                 transitionDuration={500}
+                fullWidth
+                sx={{ '& .MuiDialog-paper': { maxWidth: '300px' } }}
                 aria-labelledby="failure-modal-title"
                 aria-describedby="failure-modal-description"
             >
@@ -220,6 +222,8 @@ const LevelProgressTracker = forwardRef(({
                 onClose={() => {}}
                 TransitionComponent={Fade}
                 transitionDuration={500}
+                fullWidth
+                sx={{ '& .MuiDialog-paper': { maxWidth: '300px' } }}
                 aria-labelledby="success-modal-title"
                 aria-describedby="success-modal-description"
             >
