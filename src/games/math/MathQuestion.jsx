@@ -1,53 +1,57 @@
 // src/games/math/MathQuestion.js
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { TextField, Button, Box, Typography } from '@mui/material';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
+import {TextField, Box, Typography} from '@mui/material';
+import Keyboard from 'react-simple-keyboard';
+import 'react-simple-keyboard/build/css/index.css';
+
 import QuestionGenerator from './QuestionGenerator';
 import KaTeXComponents from './KaTeXComponents';
 
-function MathQuestion({ config, progressRef }) {
-    const { coefficients, operations, range } = config;
+function MathQuestion({config, progressRef}) {
+    const {coefficients, operations, range} = config;
 
     const [answer, setAnswer] = useState('');
     const [status, setStatus] = useState('idle'); // idle | correct | wrong
     const [inputBg, setInputBg] = useState('white');
-    const [buttonBg, setButtonBg] = useState('#007bff');
     const [fade, setFade] = useState(true);
 
     const inputRef = useRef(null);
+    const keyboardRef = useRef(null);
 
-    /* ===================== Focus input ===================== */
-    const focusInput = useCallback(() => {
+    /** If true, next digit replaces entire value */
+    const replaceOnNextInput = useRef(false);
+
+    const focusAndSelectInput = useCallback(() => {
         const input = inputRef.current?.querySelector('input');
-        input?.focus();
-        input?.select();
+        if (input) {
+            input.focus();
+            input.select();
+        }
     }, []);
 
-    /* ===================== Question generation ===================== */
     const questionGenerator = QuestionGenerator({
         coefficients,
         operations,
         range,
         onQuestionGenerated: () => {
             setAnswer('');
+            keyboardRef.current?.clearInput();
+            replaceOnNextInput.current = false;
             setStatus('idle');
             setInputBg('white');
-            setButtonBg('#007bff');
         },
     });
 
-    const { numbers, operators, correctAnswer, latexExpression, generateQuestion } = questionGenerator;
+    const {correctAnswer, latexExpression, generateQuestion} = questionGenerator;
 
-    /* ===================== Submit answer ===================== */
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!answer) return;
+    const handleSubmit = () => {
+        if (!answer || status === 'correct') return;
 
         const userAnswer = parseInt(answer, 10);
 
         if (userAnswer === correctAnswer) {
             setStatus('correct');
-            setInputBg('#d4edda'); // green
-            setButtonBg('#9cc7a3'); // green
+            setInputBg('#d4edda');
             progressRef.current?.handleCorrectAnswer();
 
             setTimeout(() => {
@@ -55,43 +59,76 @@ function MathQuestion({ config, progressRef }) {
                 setTimeout(() => {
                     generateQuestion();
                     setFade(true);
-                    focusInput();
+                    focusAndSelectInput();
                 }, 250);
             }, 600);
         } else {
             setStatus('wrong');
-            setInputBg('#f8d7da'); // red
-            setButtonBg('#f5c6cb'); // red
+            setInputBg('#f8d7da');
+            replaceOnNextInput.current = true;
             progressRef.current?.handleIncorrectAnswer();
-            focusInput();
+            focusAndSelectInput();
         }
     };
 
-    /* ===================== Fade background back ===================== */
+    /** Reset visual error state */
     useEffect(() => {
         if (status === 'wrong') {
             const timer = setTimeout(() => {
                 setInputBg('white');
-                setButtonBg('#007bff');
                 setStatus('idle');
             }, 1000);
             return () => clearTimeout(timer);
         }
     }, [status]);
 
-    /* ===================== Initial question ===================== */
     useEffect(() => {
         generateQuestion();
     }, []);
 
+    /** Keep onscreen keyboard in sync */
     useEffect(() => {
-        focusInput();
-    }, [numbers, operators, focusInput]);
+        keyboardRef.current?.setInput(answer);
+    }, [answer]);
 
-    /* ===================== Render ===================== */
+    /** Unified input handler (used by BOTH keyboards) */
+    const addDigit = (digit) => {
+        setAnswer(prev => {
+            if (replaceOnNextInput.current) {
+                replaceOnNextInput.current = false;
+                return digit;
+            }
+            return prev.length < 3 ? prev + digit : prev;
+        });
+    };
+
+    /** Physical keyboard support */
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (status === 'correct') return;
+
+            if (e.key >= '0' && e.key <= '9') {
+                e.preventDefault();
+                addDigit(e.key);
+            }
+
+            if (e.key === 'Backspace') {
+                e.preventDefault();
+                setAnswer(prev => prev.slice(0, -1));
+            }
+
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSubmit();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [status, handleSubmit]);
+
     return (
-        <Box component="form" onSubmit={handleSubmit}>
-            {/* Question content that fades during transitions */}
+        <Box>
             <Box
                 sx={{
                     opacity: fade ? 1 : 0,
@@ -100,23 +137,26 @@ function MathQuestion({ config, progressRef }) {
                     mt: 3,
                 }}
             >
-                <Box display="flex" alignItems="center" gap={2} mb={2}>
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"   // 👈 center horizontally
+                    gap={2}
+                    mb={2}
+                    sx={{
+                        width: '100%',        // 👈 take full row width
+                        textAlign: 'center',
+                    }}
+                >
                     <Typography variant="h5">
-                        <KaTeXComponents math={latexExpression} />
+                        <KaTeXComponents math={latexExpression}/>
                     </Typography>
 
                     <TextField
                         ref={inputRef}
-                        type="tel"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
                         value={answer}
                         disabled={status === 'correct'}
-                        onChange={(e) => setAnswer(e.target.value)}
+                        inputProps={{readOnly: true}} // blocks mobile keyboard
                         sx={{
                             width: 70,
                             '& .MuiOutlinedInput-root': {
@@ -128,26 +168,51 @@ function MathQuestion({ config, progressRef }) {
                 </Box>
             </Box>
 
-            {/* Submit button that remains stable during transitions */}
-            <Box display="flex" justifyContent="center" mt={2}>
-                <Button
-                    type="submit"
-                    variant="contained"
-                    sx={{
-                        px: 4,
-                        py: 1.5,
-                        fontSize: '1rem',
-                        bgcolor: buttonBg,
-                        '&:hover': {
-                            bgcolor: status === 'correct' ? '#9cc7a3' : '#0056b3',
-                        },
-                        color: 'white',
-                        borderRadius: 2,
-                        transition: 'all 0.2s ease',
+            {/* On-screen keyboard */}
+            <Box
+                mt={2}
+                sx={{
+                    width: 260,          // 👈 fixed keyboard width
+                    maxWidth: '100%',
+                }}
+            >
+                <Keyboard
+                    keyboardRef={(r) => (keyboardRef.current = r)}
+                    layout={{
+                        default: [
+                            '1 2 3',
+                            '4 5 6',
+                            '7 8 9',
+                            '{bksp} 0 {enter}',
+                        ],
                     }}
-                >
-                    Zatwierdź
-                </Button>
+                    display={{
+                        '{bksp}': '⌫',
+                        '{enter}': 'OK',
+                    }}
+                    buttonTheme={[
+                        {
+                            class:
+                                status === 'correct'
+                                    ? 'hg-ok-correct'
+                                    : status === 'wrong'
+                                        ? 'hg-ok-wrong'
+                                        : 'hg-ok-idle',
+                            buttons: '{enter}',
+                        },
+                    ]}
+                    onKeyPress={(button) => {
+                        if (status === 'correct') return;
+
+                        if (button === '{bksp}') {
+                            setAnswer(prev => prev.slice(0, -1));
+                        } else if (button === '{enter}') {
+                            handleSubmit();
+                        } else {
+                            addDigit(button);
+                        }
+                    }}
+                />
             </Box>
         </Box>
     );

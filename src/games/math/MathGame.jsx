@@ -28,12 +28,12 @@ function MathGame({ config }) {
     };
 
     return (
-        <Box display="flex" flexDirection="column" alignItems="center" mt={4} px={2}>
+        <Box display="flex" flexDirection="column" alignItems="center" mt={4} px={1}>
             {/* Level description */}
             <LevelInfo config={config} level={level} />
 
             {/* Progress Tracker */}
-            <Box sx={{ minWidth: 250, maxWidth: '90%' }}>
+            <Box sx={{ minWidth: 250 }}>
                 <LevelProgressTracker
                     key={`level-${level}`} // force remount on level change
                     ref={progressRef}

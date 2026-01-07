@@ -1,0 +1,16 @@
+/*Keyboard*/
+/* Make ALL keys equal width */
+.hg-row {
+    display: flex;
+}
+
+.hg-row .hg-button {
+    flex: 1 !important;
+    max-width: none !important;
+}
+/*Keyboard END*/
+
+input::selection {
+    background: rgba(0, 123, 255, 0.4); /* semi-transparent blue */
+    color: white;
+}

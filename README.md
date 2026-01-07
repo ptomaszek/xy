@@ -10,6 +10,12 @@
  - usun strzalki math game
  - test mobile math game
  - ai md tests
+ - games:
+   - kierunki:
+     - gora, dol, prawo, lewo, przod, tyl
+     - polnoc, poludnie
+   - zegar
+   - czytanie: słowo i przedmioty do wyboru
 
 ## GENAIs
  - kat-coder-pro:free

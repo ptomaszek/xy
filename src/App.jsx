@@ -252,8 +252,7 @@ function AppContent() {
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    p: 3,
-                    width: { md: 'calc(100% - 240px)' },
+                    p: 1,
                     backgroundColor: '#f8f9fa'
                 }}
             >
@@ -263,7 +262,7 @@ function AppContent() {
                     <Route
                         path="/"
                         element={
-                            <Container maxWidth="lg">
+                            <Container>
                                 <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
                                     Wybierz grę z menu
                                 </Typography>
@@ -271,7 +270,7 @@ function AppContent() {
                         }
                     />
                     <Route path="/games/math" element={
-                        <Container maxWidth="lg">
+                        <Container >
                             <Typography variant="h6" gutterBottom sx={{ mt: 4, mb: 2 }}>
                                 Poziomy:
                             </Typography>
