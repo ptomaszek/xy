@@ -5,20 +5,26 @@ import {
     Drawer,
     List,
     ListItem,
+    ListItemButton,
     ListItemText,
     Toolbar,
     Typography,
     IconButton,
     Container,
     CssBaseline,
-    useTheme,
-    ListItemButton,
-    Collapse
+    Collapse,
+    useTheme
 } from '@mui/material';
-import { HashRouter as Router, useLocation, useNavigate, Link as RouterLink, Routes, Route } from 'react-router-dom';
+import {
+    HashRouter as Router,
+    Routes,
+    Route,
+    Link as RouterLink,
+    useLocation
+} from 'react-router-dom';
 import MathGame from './games/math/MathGame';
 
-// Centralized game configuration - focus on actual game parameters only
+
 const gameConfig = {
     math: {
         title: 'Matematyka',
@@ -33,173 +39,117 @@ const gameConfig = {
     }
 };
 
-// Auto-generate menu items from game configuration
-const menuItems = [
-    {
-        text: gameConfig.math.title,
-        path: gameConfig.math.path,
-        subitems: [
-            {
-                id: 'level-info',
-                text: 'Opis poziomów',
-                path: gameConfig.math.path
-            },
-            ...gameConfig.math.levels.map((config, index) => ({
-                id: index + 1,
-                text: `Poziom ${index + 1}`,
-                path: `${gameConfig.math.path}/levels/${index + 1}`,
-                config: { ...config, level: index + 1 }
-            }))
-        ]
-    },
-    { text: 'Dummy', path: '/games/dummy' }
-];
+/* =========================
+   MENU
+   ========================= */
 
-const MenuItem = ({ item, depth = 0, onItemClick, activePath }) => {
+function MathMenu({ activePath, onItemClick }) {
     const theme = useTheme();
-    const navigate = useNavigate();
     const [open, setOpen] = useState(true);
-    const hasSubitems = item.subitems && item.subitems.length > 0;
-    const isActive = activePath === item.path;
-
-    const handleClick = () => {
-        if (hasSubitems) {
-            setOpen(!open);
-        } else {
-            onItemClick();
-        }
-    };
 
     return (
         <>
             <ListItem disablePadding>
                 <ListItemButton
-                    component={hasSubitems ? 'div' : RouterLink}
-                    to={hasSubitems ? undefined : item.path}
-                    onClick={handleClick}
-                    sx={{
-                        borderRadius: 1,
-                        pl: 2 + depth * 2,
-                        backgroundColor: isActive ? theme.palette.action.selected : 'inherit',
-                        '&:hover': {
-                            backgroundColor: theme.palette.action.hover
-                        }
-                    }}
+                    onClick={() => setOpen(o => !o)}
+                    sx={{ fontWeight: 'bold' }}
                 >
-                    <ListItemText
-                        primary={item.text}
-                        primaryTypographyProps={{
-                            fontSize: item.id === 'level-info' ? '0.8rem' : (depth > 0 ? '0.875rem' : '1rem'),
-                            fontWeight: hasSubitems ? 'bold' : 'normal'
-                        }}
-                    />
-                    {hasSubitems ? (open ? '▲' : '▼') : null}
+                    <ListItemText primary={gameConfig.math.title} />
+                    {open ? '▲' : '▼'}
                 </ListItemButton>
             </ListItem>
-            {hasSubitems && (
-                <Collapse in={open} timeout="auto" unmountOnExit>
-                    <List component="div" disablePadding>
-                        {item.subitems.map((subitem, index) => (
-                            <MenuItem
-                                key={index}
-                                item={subitem}
-                                depth={depth + 1}
-                                onItemClick={onItemClick}
-                                activePath={activePath}
+
+            <Collapse in={open} timeout="auto" unmountOnExit>
+                <List disablePadding>
+                    {/* Level description */}
+                    <ListItem disablePadding>
+                        <ListItemButton
+                            component={RouterLink}
+                            to={gameConfig.math.path}
+                            selected={activePath === gameConfig.math.path}
+                            onClick={onItemClick}
+                            sx={{ pl: 4 }}
+                        >
+                            <ListItemText
+                                primary="Opis poziomów"
+                                primaryTypographyProps={{ fontSize: '0.8rem' }}
                             />
-                        ))}
-                    </List>
-                </Collapse>
-            )}
+                        </ListItemButton>
+                    </ListItem>
+
+                    {/* Levels */}
+                    {gameConfig.math.levels.map((config, index) => {
+                        const level = index + 1;
+                        const path = `${gameConfig.math.path}/levels/${level}`;
+
+                        return (
+                            <ListItem key={level} disablePadding>
+                                <ListItemButton
+                                    component={RouterLink}
+                                    to={path}
+                                    selected={activePath === path}
+                                    onClick={onItemClick}
+                                    sx={{ pl: 4 }}
+                                >
+                                    <ListItemText primary={`Poziom ${level}`} />
+                                </ListItemButton>
+                            </ListItem>
+                        );
+                    })}
+                </List>
+            </Collapse>
         </>
     );
-};
+}
 
-const MenuList = ({ onItemClick = () => { }, activePath }) => {
+function MenuList({ onItemClick }) {
+    const location = useLocation();
+
     return (
         <List>
-            {menuItems.map((item, index) => (
-                <MenuItem
-                    key={index}
-                    item={item}
-                    onItemClick={onItemClick}
-                    activePath={activePath}
-                />
-            ))}
+            <MathMenu
+                activePath={location.pathname}
+                onItemClick={onItemClick}
+            />
+
+            <ListItem disablePadding>
+                <ListItemButton
+                    component={RouterLink}
+                    to="/games/dummy"
+                    selected={location.pathname === '/games/dummy'}
+                    onClick={onItemClick}
+                >
+                    <ListItemText primary="Dummy" />
+                </ListItemButton>
+            </ListItem>
         </List>
     );
-};
+}
+
+/* =========================
+   APP CONTENT
+   ========================= */
 
 function AppContent() {
     const [mobileOpen, setMobileOpen] = useState(false);
-    const location = useLocation();
-    const navigate = useNavigate();
 
     const handleDrawerToggle = () => {
-        setMobileOpen((prev) => !prev);
+        setMobileOpen(o => !o);
     };
 
     const drawer = (
-        <Box sx={{ width: 240 }} role="presentation">
+        <Box sx={{ width: 240 }}>
             <Toolbar />
-            <MenuList onItemClick={handleDrawerToggle} activePath={location.pathname} />
+            <MenuList onItemClick={handleDrawerToggle} />
         </Box>
     );
-
-    // Dynamically generate routes from menuItems config
-    const generateRoutes = () => {
-        const routes = [];
-        menuItems.forEach(item => {
-            if (item.subitems) {
-                item.subitems.forEach(subitem => {
-                    // Specific route for MathGame levels
-                    if (subitem.path.startsWith('/games/math/levels/')) {
-                        routes.push(
-                            <Route
-                                key={subitem.path}
-                                path={subitem.path}
-                                element={<MathGame config={subitem.config} />}
-                            />
-                        );
-                    } else {
-                        // Generic subitem route - for "Opis poziomów" we don't want to render MathGame
-                        if (subitem.id === 'level-info') {
-                            // This will be handled by the explicit /games/math route below
-                            return;
-                        }
-                        routes.push(
-                            <Route
-                                key={subitem.path}
-                                path={subitem.path}
-                                element={subitem.element || (subitem.config ? <MathGame config={subitem.config} /> : undefined)} // Only pass config if it exists
-                            />
-                        );
-                    }
-                });
-            } else if (item.path === '/games/dummy') {
-                routes.push(
-                    <Route
-                        key={item.path}
-                        path={item.path}
-                        element={
-                            <Container maxWidth="lg">
-                                <Typography variant="h4" gutterBottom>
-                                    Strona Dummy
-                                </Typography>
-                                <Typography variant="body1">To jest treść strony Dummy.</Typography>
-                            </Container>
-                        }
-                    />
-                );
-            }
-        });
-        return routes;
-    };
 
     return (
         <Box sx={{ display: 'flex' }}>
             <CssBaseline />
-            <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+
+            {/* APP BAR */}
+            <AppBar position="fixed" sx={{ zIndex: theme => theme.zIndex.drawer + 1 }}>
                 <Toolbar>
                     <IconButton
                         color="inherit"
@@ -211,18 +161,17 @@ function AppContent() {
                     </IconButton>
                     <Typography
                         variant="h6"
-                        noWrap
-                        sx={{ cursor: 'pointer' }}
                         component={RouterLink}
                         to="/"
                         color="inherit"
-                        style={{ textDecoration: 'none' }}
+                        sx={{ textDecoration: 'none' }}
                     >
                         Gry dla XY
                     </Typography>
                 </Toolbar>
             </AppBar>
 
+            {/* DRAWERS */}
             <Box component="nav" sx={{ width: { md: 240 }, flexShrink: { md: 0 } }}>
                 <Drawer
                     variant="temporary"
@@ -236,18 +185,20 @@ function AppContent() {
                 >
                     {drawer}
                 </Drawer>
+
                 <Drawer
                     variant="permanent"
-                    open
                     sx={{
                         display: { xs: 'none', md: 'block' },
                         '& .MuiDrawer-paper': { width: 240 }
                     }}
+                    open
                 >
                     {drawer}
                 </Drawer>
             </Box>
 
+            {/* MAIN CONTENT */}
             <Box
                 component="main"
                 sx={{
@@ -257,36 +208,58 @@ function AppContent() {
                     backgroundColor: '#f8f9fa'
                 }}
             >
-                <Box sx={{ height: 24 }} />  {/* Much smaller than Toolbar's default height */}
+                <Box sx={{ height: 24 }} />
+
                 <Routes>
-                    {generateRoutes()}
                     <Route
                         path="/"
                         element={
                             <Container maxWidth="lg">
-                                <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+                                <Typography variant="h5" sx={{ mt: 4 }}>
                                     Wybierz grę z menu
                                 </Typography>
                             </Container>
                         }
                     />
-                    <Route path="/games/math" element={
-                        <Container maxWidth="lg">
-                            <Typography variant="h6" gutterBottom sx={{ mt: 4, mb: 2 }}>
-                                Poziomy:
-                            </Typography>
-                            <Typography variant="body1">
-                                 TODO list with descriptions
-                            </Typography>
-                        </Container>
-                    } />
+
+                    <Route
+                        path={gameConfig.math.path}
+                        element={
+                            <Container maxWidth="lg">
+                                <Typography variant="h6" sx={{ mt: 4 }}>
+                                    Poziomy:
+                                </Typography>
+                                <Typography>TODO list with descriptions</Typography>
+                            </Container>
+                        }
+                    />
+
+                    {gameConfig.math.levels.map((config, index) => (
+                        <Route
+                            key={index}
+                            path={`${gameConfig.math.path}/levels/${index + 1}`}
+                            element={
+                                <MathGame config={{ ...config, level: index + 1 }} />
+                            }
+                        />
+                    ))}
+
+                    <Route
+                        path="/games/dummy"
+                        element={
+                            <Container maxWidth="lg">
+                                <Typography variant="h4">Strona Dummy</Typography>
+                                <Typography>To jest treść strony Dummy.</Typography>
+                            </Container>
+                        }
+                    />
                 </Routes>
             </Box>
         </Box>
     );
 }
 
-function App() {
+export default function App() {
     return (
         <Router>
             <AppContent />
@@ -294,5 +267,4 @@ function App() {
     );
 }
 
-export default App;
 export { AppContent };

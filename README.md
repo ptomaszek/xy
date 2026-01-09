@@ -14,7 +14,7 @@
    - kierunki:
      - gora, dol, prawo, lewo, przod, tyl
      - polnoc, poludnie
-   - zegar
+   - zegar; czas pomiedzy dwoma zegarami
    - czytanie: słowo i przedmioty do wyboru
 
 ## GENAIs
