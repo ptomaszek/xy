@@ -1,16 +1,17 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Box, Typography, TextField } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import Clock from 'react-clock';
 import 'react-clock/dist/Clock.css';
 import Keyboard from 'react-simple-keyboard';
 import 'react-simple-keyboard/build/css/index.css';
+import TimeInput from './TimeInput';
 
 function ClockGame({ config, progressRef }) {
     const [answer, setAnswer] = useState('');
     const [status, setStatus] = useState('idle'); // idle | correct | wrong
     const [currentTime, setCurrentTime] = useState(new Date());
     const [fade, setFade] = useState(true);
-    
+
     const inputRef = useRef(null);
     const keyboardRef = useRef(null);
 
@@ -44,7 +45,7 @@ function ClockGame({ config, progressRef }) {
 
         const currentHour = currentTime.getHours();
         const validAnswers = getValidAnswersForHour(currentHour);
-        
+
         if (validAnswers.includes(answer)) {
             setStatus('correct');
             progressRef.current?.handleCorrectAnswer();
@@ -67,23 +68,28 @@ function ClockGame({ config, progressRef }) {
         }
     };
 
-    // Function to generate all valid answers for a given hour
     const getValidAnswersForHour = (hour) => {
         const answers = [];
-        
-        // Add base hour
+
+        // Add base hour (e.g., 1, 2, ..., 12)
         answers.push(hour.toString());
-        
-        // For hour 0 add alternative forms
-        if (hour === 0) {
-            answers.push('00', '12', '24');
-        } else if (hour >= 1 && hour <= 11) {
-            // For hours 1-11 add 12-hour and 24-hour versions
-            answers.push((hour + 12).toString());
+
+        // Add zero-padded version (e.g., 01, 02, ..., 12)
+        answers.push(hour.toString().padStart(2, '0'));
+
+        // Add corresponding 24-hour equivalent for hours 1-11
+        if (hour >= 1 && hour <= 11) {
+            answers.push((hour + 12).toString()); // Add 24-hour equivalent (1 -> 13, 2 -> 14, ..., 11 -> 23)
         }
-        
+
+        // Special case for hour 12
+        if (hour === 12) {
+            answers.push('00', '12', '24');  // For hour 12, we allow '00', '12', and '24'
+        }
+
         return answers;
     };
+
 
     // Function to add digits to the answer
     const addDigit = (digit) => {
@@ -171,23 +177,17 @@ function ClockGame({ config, progressRef }) {
                             renderHourMarks={true}
                             renderMinuteMarks={false}
                             hourHandWidth={6}
-                            minuteHandWidth={0}
+                            minuteHandWidth={4}
                             secondHandWidth={0}
                         />
                     </Typography>
 
-                    <TextField
-                        ref={inputRef}
+                    <TimeInput
                         value={answer}
+                        onChange={setAnswer}
                         disabled={status === 'correct'}
-                        inputProps={{readOnly: true}}
-                        sx={{
-                            width: 70,
-                            '& .MuiOutlinedInput-root': {
-                                bgcolor: status === 'correct' ? '#d4edda' : status === 'wrong' ? '#f8d7da' : 'white',
-                                transition: 'background-color 0.5s ease',
-                            },
-                        }}
+                        readOnly={true}
+                        status={status}
                     />
                 </Box>
             </Box>
