@@ -25,6 +25,7 @@ import {
 import MathGame from './games/math/MathGame';
 import ClockGame from './games/clock/ClockGame';
 import LevelProgressTracker from './LevelProgressTracker';
+import LevelInfo from './games/clock/LevelInfo';
 
 
 const gameConfig = {
@@ -247,6 +248,9 @@ function AppContent() {
                             path={`${gameConfig.clock.path}/levels/${index + 1}`}
                             element={
                                 <Box display="flex" flexDirection="column" alignItems="center" mt={4} px={1}>
+                                    {/* Level description */}
+                                    <LevelInfo config={config} level={index + 1} />
+
                                     <Box sx={{ minWidth: 250, maxWidth: '90%' }}>
                                         <LevelProgressTracker
                                             key={`clock-level-${index + 1}`}
