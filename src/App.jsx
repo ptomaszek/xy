@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import {
     AppBar,
     Box,
@@ -24,6 +24,7 @@ import {
 } from 'react-router-dom';
 import MathGame from './games/math/MathGame';
 import ClockGame from './games/clock/ClockGame';
+import LevelProgressTracker from './LevelProgressTracker';
 
 
 const gameConfig = {
@@ -129,6 +130,7 @@ function MenuList({onItemClick}) {
 
 function AppContent() {
     const [mobileOpen, setMobileOpen] = useState(false);
+    const progressRef = useRef(null);
 
     const handleDrawerToggle = () => {
         setMobileOpen(o => !o);
@@ -235,7 +237,7 @@ function AppContent() {
                         <Route
                             key={index}
                             path={`${gameConfig.math.path}/levels/${index + 1}`}
-                            element={<MathGame config={{ ...config, level: index + 1 }} />}
+                            element={<MathGame config={{ ...config, level: index + 1 }} progressRef={progressRef} />}
                         />
                     ))}
 
@@ -243,7 +245,21 @@ function AppContent() {
                         <Route
                             key={index}
                             path={`${gameConfig.clock.path}/levels/${index + 1}`}
-                            element={<ClockGame config={config} />}
+                            element={
+                                <Box display="flex" flexDirection="column" alignItems="center" mt={4} px={1}>
+                                    <Box sx={{ minWidth: 250, maxWidth: '90%' }}>
+                                        <LevelProgressTracker
+                                            key={`clock-level-${index + 1}`}
+                                            ref={progressRef}
+                                            tasksToComplete={10}
+                                            maxMistakes={3}
+                                            onLevelRestart={() => {}}
+                                            onNextLevel={() => {}}
+                                        />
+                                    </Box>
+                                    <ClockGame config={config} progressRef={progressRef} />
+                                </Box>
+                            }
                         />
                     ))}
                 </Routes>
