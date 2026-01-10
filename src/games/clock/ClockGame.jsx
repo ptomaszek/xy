@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Box, Typography, TextField } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import Clock from 'react-clock';
 import 'react-clock/dist/Clock.css';
 import Keyboard from 'react-simple-keyboard';
 import 'react-simple-keyboard/build/css/index.css';
+import TimeInput from './TimeInput';
 
 function ClockGame({ config, progressRef }) {
     const [answer, setAnswer] = useState('');
@@ -171,23 +172,17 @@ function ClockGame({ config, progressRef }) {
                             renderHourMarks={true}
                             renderMinuteMarks={false}
                             hourHandWidth={6}
-                            minuteHandWidth={0}
+                            minuteHandWidth={4}
                             secondHandWidth={0}
                         />
                     </Typography>
 
-                    <TextField
-                        ref={inputRef}
+                    <TimeInput
                         value={answer}
+                        onChange={setAnswer}
                         disabled={status === 'correct'}
-                        inputProps={{readOnly: true}}
-                        sx={{
-                            width: 70,
-                            '& .MuiOutlinedInput-root': {
-                                bgcolor: status === 'correct' ? '#d4edda' : status === 'wrong' ? '#f8d7da' : 'white',
-                                transition: 'background-color 0.5s ease',
-                            },
-                        }}
+                        readOnly={true}
+                        status={status}
                     />
                 </Box>
             </Box>
