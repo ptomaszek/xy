@@ -158,29 +158,17 @@ function ClockGame({ config, progressRef }) {
                     mt: 3,
                 }}
             >
-                <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    gap={2}
-                    mb={2}
-                    sx={{
-                        width: '100%',
-                        textAlign: 'center',
-                    }}
-                >
-                    <Typography variant="h5">
-                        <Clock
-                            value={currentTime}
-                            size={150}
-                            renderNumbers={true}
-                            renderHourMarks={true}
-                            renderMinuteMarks={false}
-                            hourHandWidth={6}
-                            minuteHandWidth={4}
-                            secondHandWidth={0}
-                        />
-                    </Typography>
+                <Box display="flex" alignItems="center" justifyContent="center" gap={3} mb={2}>
+                    <Clock
+                        value={currentTime}
+                        size={150}
+                        renderNumbers
+                        renderHourMarks
+                        renderMinuteMarks={false}
+                        hourHandWidth={6}
+                        minuteHandWidth={4}
+                        secondHandWidth={0}
+                    />
 
                     <TimeInput
                         value={answer}
