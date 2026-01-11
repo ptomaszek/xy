@@ -5,6 +5,7 @@ import 'react-clock/dist/Clock.css';
 import Keyboard from 'react-simple-keyboard';
 import 'react-simple-keyboard/build/css/index.css';
 import TimeInput2 from './TimeInput2.jsx';
+import StyledClock from './StyledClock';
 
 function ClockGame2({ config, progressRef }) {
     const [answer, setAnswer] = useState('00:00');
@@ -131,53 +132,33 @@ function ClockGame2({ config, progressRef }) {
 
     return (
         <Box>
-            <Box
-                sx={{
-                    opacity: fade ? 1 : 0,
-                    transform: fade ? 'scale(1)' : 'scale(0.98)',
-                    transition: 'opacity 250ms ease, transform 250ms ease',
-                    mt: 3,
-                }}
-            >
-                <Box display="flex" alignItems="center" justifyContent="center" gap={3} mb={2}>
-                    <Clock
-                        value={currentTime}
-                        size={150}
-                        renderNumbers
-                        renderHourMarks
-                        renderMinuteMarks={false}
-                        hourHandWidth={6}
-                        minuteHandWidth={4}
-                        secondHandWidth={0}
-                    />
+            <StyledClock currentTime={currentTime} fade={fade}>
+                <TimeInput2
+                    ref={timeInputRef}
+                    value={answer}
+                    onChange={handleTimeInputChange}
+                    onSubmit={handleSubmit}
+                    disabled={status === 'correct'}
+                    status={status}
+                />
+            </StyledClock>
 
-                    <TimeInput2
-                        ref={timeInputRef}
-                        value={answer}
-                        onChange={handleTimeInputChange}
-                        onSubmit={handleSubmit}
-                        disabled={status === 'correct'}
-                        status={status}
-                    />
-                </Box>
-
-                {/* Temporary: Display expected answer for testing */}
-                <Box display="flex" justifyContent="center" mb={2}>
-                    <Typography
-                        variant="h6"
-                        color="textSecondary"
-                        sx={{
-                            fontFamily: 'monospace',
-                            fontSize: '1.2rem',
-                            backgroundColor: '#f0f0f0',
-                            padding: '8px 16px',
-                            borderRadius: '4px',
-                            border: '1px solid #ddd'
-                        }}
-                    >
-                        Expected: {currentTime.getHours().toString().padStart(2, '0')}:{currentTime.getMinutes().toString().padStart(2, '0')}
-                    </Typography>
-                </Box>
+            {/* Temporary: Display expected answer for testing */}
+            <Box display="flex" justifyContent="center" mb={2}>
+                <Typography
+                    variant="h6"
+                    color="textSecondary"
+                    sx={{
+                        fontFamily: 'monospace',
+                        fontSize: '1.2rem',
+                        backgroundColor: '#f0f0f0',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        border: '1px solid #ddd'
+                    }}
+                >
+                    Expected: {currentTime.getHours().toString().padStart(2, '0')}:{currentTime.getMinutes().toString().padStart(2, '0')}
+                </Typography>
             </Box>
 
             <Box mt={2} sx={{ width: 260 }}>

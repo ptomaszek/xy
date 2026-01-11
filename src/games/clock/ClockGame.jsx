@@ -5,6 +5,7 @@ import 'react-clock/dist/Clock.css';
 import Keyboard from 'react-simple-keyboard';
 import 'react-simple-keyboard/build/css/index.css';
 import TimeInput from './TimeInput';
+import StyledClock from './StyledClock';
 
 function ClockGame({ config, progressRef }) {
     const [answer, setAnswer] = useState('');
@@ -150,35 +151,15 @@ function ClockGame({ config, progressRef }) {
 
     return (
         <Box>
-            <Box
-                sx={{
-                    opacity: fade ? 1 : 0,
-                    transform: fade ? 'scale(1)' : 'scale(0.98)',
-                    transition: 'opacity 250ms ease, transform 250ms ease',
-                    mt: 3,
-                }}
-            >
-                <Box display="flex" alignItems="center" justifyContent="center" gap={3} mb={2}>
-                    <Clock
-                        value={currentTime}
-                        size={150}
-                        renderNumbers
-                        renderHourMarks
-                        renderMinuteMarks={false}
-                        hourHandWidth={6}
-                        minuteHandWidth={4}
-                        secondHandWidth={0}
-                    />
-
-                    <TimeInput
-                        value={answer}
-                        onChange={setAnswer}
-                        disabled={status === 'correct'}
-                        readOnly={true}
-                        status={status}
-                    />
-                </Box>
-            </Box>
+            <StyledClock currentTime={currentTime} fade={fade}>
+                <TimeInput
+                    value={answer}
+                    onChange={setAnswer}
+                    disabled={status === 'correct'}
+                    readOnly={true}
+                    status={status}
+                />
+            </StyledClock>
 
             {/* On-screen keyboard */}
             <Box

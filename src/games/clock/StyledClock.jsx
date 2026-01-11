@@ -10,8 +10,9 @@ import 'react-clock/dist/Clock.css';
  * @param {Object} props
  * @param {Date} props.currentTime - The current time to display on the clock
  * @param {boolean} props.fade - Whether the fade animation is active
+ * @param {React.ReactNode} props.children - The input component to display next to the clock
  */
-function StyledClock({ currentTime, fade }) {
+function StyledClock({ currentTime, fade, children }) {
     return (
         <Box
             sx={{
@@ -32,6 +33,7 @@ function StyledClock({ currentTime, fade }) {
                     minuteHandWidth={4}
                     secondHandWidth={0}
                 />
+                {children}
             </Box>
         </Box>
     );
