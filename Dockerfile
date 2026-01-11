@@ -1,39 +1,24 @@
-# Development stage
-FROM node:24.12.0-alpine AS development
+# Use Node Alpine for smaller image
+FROM node:24.12.0-alpine AS base
 
 WORKDIR /app
 
-# Copy package files
+# Copy only package.json to leverage cache
 COPY package.json ./
 
-# Install all dependencies for development
+# Install dependencies (cached during build)
 RUN npm install
 
-# Copy source code
+# Copy all source code
 COPY . .
 
+# Make entrypoint script executable
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Expose Vite port
 EXPOSE 5173
 
-CMD ["npm", "run", "dev"]
-
-# Production stage
-FROM node:24.12.0-alpine AS production
-
-WORKDIR /app
-
-# Copy package files
-COPY package.json ./
-
-# Install all dependencies
-RUN npm install
-
-# Copy source code
-COPY . .
-
-# Build the application
-RUN npm run build
-
-# Serve the application
-EXPOSE 5173
-
-CMD ["npm", "run", "preview"]
+# Default command (can be overridden in docker-compose)
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

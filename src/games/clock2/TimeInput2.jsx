@@ -278,6 +278,16 @@ const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status }, 
         containerRef.current?.focus();
     }, []);
 
+    // Move focus to hours section if status becomes 'wrong'
+    useEffect(() => {
+        if (status === 'wrong') {
+            setActiveSection('hours');
+            // Optional: focus the container so keyboard inputs go there
+            containerRef.current?.focus();
+        }
+    }, [status]);
+
+
     // Get display value for each section
     const getHoursDisplay = () => {
         if (hoursBuffer) return hoursBuffer.padStart(2, '_');
