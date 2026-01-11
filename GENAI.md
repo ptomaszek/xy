@@ -1,5 +1,8 @@
 # Project Guidelines for AI Development
 
+## Project Overview
+This is a React-based educational game application called "xy" designed for learning math and time-telling skills. The project emphasizes simplicity, maintainability, and Docker-first development.
+
 ## Developer Profile
 I am an experienced React web developer with a strong focus on simplicity, maintainability, and performance. I value clean code practices and modern development workflows.
 
@@ -51,13 +54,31 @@ I am an experienced React web developer with a strong focus on simplicity, maint
 - **Docker Compose**: Local development environment
 - **Environment Variables**: Secure configuration management
 
+## Current Project Structure
+
+### Games
+New games are added constantly.
+
+### Architecture
+- **React 19+** with functional components and hooks
+- **React Router** for client-side navigation
+- **Material-UI (MUI)** for UI components
+- **Vite** for fast builds and development
+- **Vitest** with React Testing Library for testing
+
+### Dependencies
+- **Core**: React, React DOM, React Router
+- **UI**: Material-UI, React Clock, React Confetti
+- **Input**: React Simple Keyboard
+- **Utilities**: React Use, Emotion for styling
+
 ## Technology Stack Preferences
 
 ### Frontend
 - **React 19+** with functional components
 - **Vite** for fast builds and development
-- **Tailwind CSS** or minimal CSS-in-JS for styling
-- **React Router** for client-side routing (when needed)
+- **Material-UI** for component library
+- **React Router** for client-side routing
 
 ### Development Tools
 - **Docker** for containerization
@@ -116,6 +137,10 @@ Only add external libraries when:
 - **Check container status**: Use `docker-compose ps` to see running containers
 - **View logs**: Use `docker-compose logs -f` to monitor application output
 - **Test in browser**: Application runs at http://localhost:5173
+
+## Current Development Tasks
+- **Code Duplication**: Extract common functionality between similar game implementations
+- **Testing**: Improve test coverage for game logic and user interactions
 
 ## AI Development Guidelines
 When making changes or adding features:
