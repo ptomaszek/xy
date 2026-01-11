@@ -17,6 +17,7 @@ describe('TimeInput2 Component', () => {
                 disabled={false}
                 status="idle"
                 {...props}
+                mode="full-time"
             />
         );
     };

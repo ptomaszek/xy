@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Box, Typography } from '@mui/material';
 
-const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status }, ref) => {
+const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status, mode = 'full-time' }, ref) => {
     // Parse initial value into hours and minutes
     const parseTime = (timeString) => {
         const [hours = '00', minutes = '00'] = timeString.split(':');
@@ -51,7 +51,7 @@ const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status }, 
                 setHoursBuffer('');
 
                 // Update parent with new time
-                const newValue = `${validHours}:${committedMinutes}`;
+                const newValue = mode === 'hours-only' ? validHours : `${validHours}:${committedMinutes}`;
                 onChange(newValue);
                 return validHours;
             }
@@ -85,19 +85,34 @@ const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status }, 
             if (newBuffer.length <= 2) {
                 setHoursBuffer(newBuffer);
 
+                // Update parent with current buffer state for hours-only mode
+                if (mode === 'hours-only') {
+                    const newValue = newBuffer;
+                    onChange(newValue);
+                }
+
                 // If buffer is now 2 digits, validate and commit
                 if (newBuffer.length === 2) {
                     const hourNum = parseInt(newBuffer, 10);
                     const validHours = hourNum <= 23 ? newBuffer : '23';
                     setCommittedHours(validHours);
                     setHoursBuffer('');
-                    onChange(`${validHours}:${committedMinutes}`);
+                    
+                    // Update parent with new time
+                    const newValue = mode === 'hours-only' ? validHours : `${validHours}:${committedMinutes}`;
+                    onChange(newValue);
 
-                    // Auto-switch to minutes section
-                    setActiveSection('minutes');
+                    // In hours-only mode, auto-submit when hours are complete
+                    if (mode === 'hours-only' && onSubmit) {
+                        onSubmit(validHours);
+                    } else if (mode === 'full-time') {
+                        // Auto-switch to minutes section
+                        setActiveSection('minutes');
+                    }
                 }
             }
-        } else {
+        } else if (mode === 'full-time') {
+            // Only handle minutes in full-time mode
             const newBuffer = minutesBuffer + digit;
             if (newBuffer.length <= 2) {
                 setMinutesBuffer(newBuffer);
@@ -124,7 +139,8 @@ const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status }, 
             } else {
                 // Clear committed hours
                 setCommittedHours('00');
-                onChange(`00:${committedMinutes}`);
+                const newValue = mode === 'hours-only' ? '00' : `00:${committedMinutes}`;
+                onChange(newValue);
             }
         } else {
             if (minutesBuffer.length > 0) {
@@ -170,6 +186,11 @@ const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status }, 
                 finalMinutes = minuteNum <= 59 ? paddedMinutes : '59';
             }
 
+            // In hours-only mode, return just the hours
+            if (mode === 'hours-only') {
+                return finalHours;
+            }
+
             return `${finalHours}:${finalMinutes}`;
         },
         commitAndSubmit: () => {
@@ -191,6 +212,15 @@ const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status }, 
                 finalMinutes = minuteNum <= 59 ? paddedMinutes : '59';
                 setCommittedMinutes(finalMinutes);
                 setMinutesBuffer('');
+            }
+
+            // In hours-only mode, return just the hours and auto-submit
+            if (mode === 'hours-only') {
+                onChange(finalHours);
+                if (onSubmit) {
+                    onSubmit(finalHours);
+                }
+                return finalHours;
             }
 
             const finalValue = `${finalHours}:${finalMinutes}`;
@@ -219,10 +249,14 @@ const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status }, 
                 handleBackspaceAction();
             } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
-                switchSection('hours');
+                if (mode === 'full-time') {
+                    switchSection('hours');
+                }
             } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
-                switchSection('minutes');
+                if (mode === 'full-time') {
+                    switchSection('minutes');
+                }
             } else if (e.key === 'Enter' && onSubmit) {
                 e.preventDefault();
                 // Commit both buffers before submitting
@@ -379,40 +413,62 @@ const TimeInput2 = forwardRef(({ value, onChange, onSubmit, disabled, status }, 
                 :
             </Box>
 
-            {/* Minutes Section */}
-            <Box
-                ref={minutesRef}
-                data-testid="minutes-section"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    !disabled && switchSection('minutes');
-                }}
-                sx={{
-                    flex: 1,
-                    textAlign: 'left',
-                    py: 0.25,
-                    px: 0.5,
-                    bgcolor: activeSection === 'minutes' ? getActiveSectionColor() : 'transparent',
-                    borderRadius: 1,
-                    transition: 'background-color 0.2s ease',
-                    cursor: disabled ? 'not-allowed' : 'pointer',
-                    '&:hover': {
-                        bgcolor: !disabled && activeSection !== 'minutes' ? '#f5f5f5' : undefined,
-                    },
-                }}
-            >
-                <Typography
-                    component="span"
+            {/* Minutes Section - Always visible in hours-only mode, fixed to 00 */}
+            {mode === 'hours-only' ? (
+                <Box
+                    data-testid="minutes-section"
                     sx={{
+                        flex: 1,
+                        textAlign: 'left',
+                        py: 0.25,
+                        px: 0.5,
+                        bgcolor: 'transparent',
+                        borderRadius: 1,
+                        color: '#999', // Greyed out color
                         fontWeight: 'bold',
-                        color: disabled ? '#666' : '#000',
                         fontFamily: 'monospace',
                         letterSpacing: '0',
+                        userSelect: 'none',
+                        pointerEvents: 'none', // Disable interaction
                     }}
                 >
-                    {getMinutesDisplay()}
-                </Typography>
-            </Box>
+                    00
+                </Box>
+            ) : (
+                <Box
+                    ref={minutesRef}
+                    data-testid="minutes-section"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        !disabled && switchSection('minutes');
+                    }}
+                    sx={{
+                        flex: 1,
+                        textAlign: 'left',
+                        py: 0.25,
+                        px: 0.5,
+                        bgcolor: activeSection === 'minutes' ? getActiveSectionColor() : 'transparent',
+                        borderRadius: 1,
+                        transition: 'background-color 0.2s ease',
+                        cursor: disabled ? 'not-allowed' : 'pointer',
+                        '&:hover': {
+                            bgcolor: !disabled && activeSection !== 'minutes' ? '#f5f5f5' : undefined,
+                        },
+                    }}
+                >
+                    <Typography
+                        component="span"
+                        sx={{
+                            fontWeight: 'bold',
+                            color: disabled ? '#666' : '#000',
+                            fontFamily: 'monospace',
+                            letterSpacing: '0',
+                        }}
+                    >
+                        {getMinutesDisplay()}
+                    </Typography>
+                </Box>
+            )}
         </Box>
     );
 });

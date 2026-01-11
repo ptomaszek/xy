@@ -4,7 +4,7 @@ import Clock from 'react-clock';
 import 'react-clock/dist/Clock.css';
 import Keyboard from 'react-simple-keyboard';
 import 'react-simple-keyboard/build/css/index.css';
-import TimeInput from './TimeInput';
+import TimeInput2 from './TimeInput2';
 import StyledClock from './StyledClock';
 
 function ClockGame({ config, progressRef }) {
@@ -20,10 +20,9 @@ function ClockGame({ config, progressRef }) {
     const replaceOnNextInput = useRef(false);
 
     const focusAndSelectInput = useCallback(() => {
-        const input = inputRef.current?.querySelector('input');
-        if (input) {
-            input.focus();
-            input.select();
+        const container = inputRef.current;
+        if (container) {
+            container.focus();
         }
     }, []);
 
@@ -152,12 +151,14 @@ function ClockGame({ config, progressRef }) {
     return (
         <Box>
             <StyledClock currentTime={currentTime} fade={fade}>
-                <TimeInput
+                <TimeInput2
+                    ref={inputRef}
                     value={answer}
                     onChange={setAnswer}
+                    onSubmit={handleSubmit}
                     disabled={status === 'correct'}
-                    readOnly={true}
                     status={status}
+                    mode="hours-only"
                 />
             </StyledClock>
 
@@ -198,11 +199,17 @@ function ClockGame({ config, progressRef }) {
                         if (status === 'correct') return;
 
                         if (button === '{bksp}') {
-                            setAnswer(prev => prev.slice(0, -1));
+                            inputRef.current?.handleBackspace();
                         } else if (button === '{enter}') {
-                            handleSubmit();
+                            // TimeInput2 will handle submission automatically in hours-only mode
+                            // But we'll also call handleSubmit for compatibility
+                            const currentValue = inputRef.current?.getCurrentValue();
+                            if (currentValue) {
+                                setAnswer(currentValue);
+                                handleSubmit();
+                            }
                         } else {
-                            addDigit(button);
+                            inputRef.current?.handleDigit(button);
                         }
                     }}
                 />
