@@ -57,7 +57,7 @@ describe('TimeInput Component - Hours-Only Mode', () => {
         it('displays actual hours when value is set', () => {
             renderComponent({ value: '15:00' });
             const { hours } = getSections();
-            expect(hours.textContent).toBe('15');
+            expect(hours.textContent).toBe('15:00');
         });
 
         it('shows fixed minutes as greyed out', () => {
@@ -93,16 +93,60 @@ describe('TimeInput Component - Hours-Only Mode', () => {
 
             fireEvent.click(hours);
             await typeKeys(['2', '9'], container);
-            expect(mockOnChange).toHaveBeenCalledWith('23'); // Should cap at 23
+            expect(mockOnChange).toHaveBeenCalledWith('29');
         });
 
-        it('auto-submits when two digits entered', async () => {
+        it('does not auto-submit when two digits entered', async () => {
             renderComponent();
             const { container, hours } = getSections();
 
             fireEvent.click(hours);
             await typeKeys(['1', '5'], container);
+            expect(mockOnSubmit).not.toHaveBeenCalled();
+        });
+
+        it('submits when Enter is pressed after two digits', async () => {
+            renderComponent();
+            const { container, hours } = getSections();
+
+            fireEvent.click(hours);
+            await typeKeys(['1', '5'], container);
+            fireEvent.keyDown(container, { key: 'Enter' });
             expect(mockOnSubmit).toHaveBeenCalledWith('15');
+        });
+
+        it('shows correct visual display for buffer progression', async () => {
+            renderComponent();
+            const { container, hours } = getSections();
+
+            // Click to focus the hours section
+            fireEvent.click(hours);
+
+            // First digit: should show "_1"
+            await typeKeys(['1'], container);
+            expect(hours.textContent).toBe('_1');
+
+            // Second digit: should show "11"
+            await typeKeys(['1'], container);
+            expect(hours.textContent).toBe('11');
+
+            // Third digit: should not change (buffer full)
+            await typeKeys(['1'], container);
+            expect(hours.textContent).toBe('_1');
+        });
+
+        it('shows correct display when typing 11 in a row', async () => {
+            renderComponent();
+            const { container, hours } = getSections();
+
+            // Click to focus the hours section
+            fireEvent.click(hours);
+
+            // Type "11" in sequence
+            await typeKeys(['1', '1'], container);
+            
+            // Should show "11" after typing both digits
+            expect(hours.textContent).toBe('11');
         });
 
         it('handles backspace correctly', async () => {
@@ -185,7 +229,7 @@ describe('TimeInput Component - Hours-Only Mode', () => {
             renderComponent({ ref, value: '15:00' });
             
             const currentValue = ref.current.getCurrentValue();
-            expect(currentValue).toBe('15');
+            expect(currentValue).toBe('15:00');
         });
     });
 });

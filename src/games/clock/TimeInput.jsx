@@ -1,17 +1,25 @@
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { Box, Typography } from '@mui/material';
 
 const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mode = 'full-time' }, ref) => {
+    const isHoursOnly = mode === 'hours-only';
+
     // Parse initial value into hours and minutes
     const parseTime = (timeString) => {
-        const [hours = '00', minutes = '00'] = timeString.split(':');
+        if (isHoursOnly) {
+            const hours = timeString || '00';
+            return {
+                hours: hours.padStart(2, '0'),
+                minutes: '00'
+            };
+        }
+        const [hours = '00', minutes = '00'] = (timeString || '00:00').split(':');
         return {
             hours: hours.padStart(2, '0'),
             minutes: minutes.padStart(2, '0')
         };
     };
 
-    const initialTime = parseTime(value || '00:00');
+    const initialTime = parseTime(value);
 
     // State management
     const [committedHours, setCommittedHours] = useState(initialTime.hours);
@@ -21,111 +29,82 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
     const [activeSection, setActiveSection] = useState('hours');
     const [userHasInteracted, setUserHasInteracted] = useState(false);
 
-    const hoursRef = useRef(null);
-    const minutesRef = useRef(null);
     const containerRef = useRef(null);
 
-    // Get background color based on status
-    const getBackgroundColor = () => {
-        if (status === 'correct') return '#d4edda';
-        if (status === 'wrong') return '#f8d7da';
-        return 'white';
+    // Format the final value to send to parent
+    const formatValue = (hours, minutes) => {
+        return isHoursOnly ? hours : `${hours}:${minutes}`;
     };
 
-    // Get active section background color
-    const getActiveSectionColor = () => {
-        // Don't show active section color if there's a status
-        if (status === 'correct' || status === 'wrong') return 'transparent';
-        return '#e3f2fd'; // Light blue for active section
+    // Notify parent of value change
+    const notifyChange = (hours, minutes) => {
+        onChange(formatValue(hours, minutes));
     };
 
-    // Commit buffer to committed value
-    const commitBuffer = (section) => {
-        if (section === 'hours') {
-            if (hoursBuffer) {
-                const paddedHours = hoursBuffer.padStart(2, '0');
-                // Validate hours (00-23)
-                const hourNum = parseInt(paddedHours, 10);
-                const validHours = hourNum <= 23 ? paddedHours : '23';
-                setCommittedHours(validHours);
-                setHoursBuffer('');
+    // Handle digit input for hours
+    const handleHoursDigit = (digit) => {
+        // If buffer is empty but we already have a committed value, ignore input
+        // (this means we've already entered 2 digits and auto-committed)
+        if (hoursBuffer === '' && committedHours !== '00') {
+            return;
+        }
 
-                // Update parent with new time
-                const newValue = mode === 'hours-only' ? validHours : `${validHours}:${committedMinutes}`;
-                onChange(newValue);
-                return validHours;
-            }
-            return committedHours;
-        } else {
-            if (minutesBuffer) {
-                const paddedMinutes = minutesBuffer.padStart(2, '0');
-                // Validate minutes (00-59)
-                const minuteNum = parseInt(paddedMinutes, 10);
-                const validMinutes = minuteNum <= 59 ? paddedMinutes : '59';
-                setCommittedMinutes(validMinutes);
-                setMinutesBuffer('');
+        const newBuffer = hoursBuffer + digit;
 
-                // Update parent with new time
-                const newValue = `${committedHours}:${validMinutes}`;
-                onChange(newValue);
-                return validMinutes;
+        // Only allow up to 2 digits
+        if (newBuffer.length > 2) {
+            return;
+        }
+
+        setHoursBuffer(newBuffer);
+
+        // Auto-commit when buffer reaches 2 digits
+        if (newBuffer.length === 2) {
+            setCommittedHours(newBuffer);
+            setHoursBuffer('');
+            notifyChange(newBuffer, committedMinutes);
+
+            // In full-time mode, move to minutes
+            if (!isHoursOnly) {
+                setActiveSection('minutes');
             }
-            return committedMinutes;
+        }
+    };
+
+    // Handle digit input for minutes (full-time only)
+    const handleMinutesDigit = (digit) => {
+        // If buffer is empty but we already have a committed value, ignore input
+        // (this means we've already entered 2 digits and auto-committed)
+        if (minutesBuffer === '' && committedMinutes !== '00') {
+            return;
+        }
+
+        const newBuffer = minutesBuffer + digit;
+
+        // Only allow up to 2 digits
+        if (newBuffer.length > 2) {
+            return;
+        }
+
+        setMinutesBuffer(newBuffer);
+
+        // Auto-commit when buffer reaches 2 digits
+        if (newBuffer.length === 2) {
+            setCommittedMinutes(newBuffer);
+            setMinutesBuffer('');
+            notifyChange(committedHours, newBuffer);
         }
     };
 
     // Handle digit input
     const handleDigitInput = (digit) => {
         if (disabled) return;
-
         setUserHasInteracted(true);
 
         if (activeSection === 'hours') {
-            const newBuffer = hoursBuffer + digit;
-            if (newBuffer.length <= 2) {
-                setHoursBuffer(newBuffer);
-
-                // Update parent with current buffer state for hours-only mode
-                if (mode === 'hours-only') {
-                    const newValue = newBuffer;
-                    onChange(newValue);
-                }
-
-                // If buffer is now 2 digits, validate and commit
-                if (newBuffer.length === 2) {
-                    const hourNum = parseInt(newBuffer, 10);
-                    const validHours = hourNum <= 23 ? newBuffer : '23';
-                    setCommittedHours(validHours);
-                    setHoursBuffer('');
-                    
-                    // Update parent with new time
-                    const newValue = mode === 'hours-only' ? validHours : `${validHours}:${committedMinutes}`;
-                    onChange(newValue);
-
-                    // In hours-only mode, auto-submit when hours are complete
-                    if (mode === 'hours-only' && onSubmit) {
-                        onSubmit(validHours);
-                    } else if (mode === 'full-time') {
-                        // Auto-switch to minutes section
-                        setActiveSection('minutes');
-                    }
-                }
-            }
-        } else if (mode === 'full-time') {
-            // Only handle minutes in full-time mode
-            const newBuffer = minutesBuffer + digit;
-            if (newBuffer.length <= 2) {
-                setMinutesBuffer(newBuffer);
-
-                // If buffer is now 2 digits, validate and commit
-                if (newBuffer.length === 2) {
-                    const minuteNum = parseInt(newBuffer, 10);
-                    const validMinutes = minuteNum <= 59 ? newBuffer : '59';
-                    setCommittedMinutes(validMinutes);
-                    setMinutesBuffer('');
-                    onChange(`${committedHours}:${validMinutes}`);
-                }
-            }
+            handleHoursDigit(digit);
+        } else if (!isHoursOnly) {
+            handleMinutesDigit(digit);
         }
     };
 
@@ -135,33 +114,68 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
 
         if (activeSection === 'hours') {
             if (hoursBuffer.length > 0) {
+                // Remove last character from buffer
                 setHoursBuffer(prev => prev.slice(0, -1));
-            } else {
-                // Clear committed hours
+            } else if (committedHours !== '00') {
+                // Move committed value back to buffer with rightmost digit removed
+                // e.g., "23" → "_2" (buffer = "2")
+                const leftDigit = committedHours[0];
                 setCommittedHours('00');
-                const newValue = mode === 'hours-only' ? '00' : `00:${committedMinutes}`;
-                onChange(newValue);
+                setHoursBuffer(leftDigit === '0' ? '' : leftDigit);
+                notifyChange('00', committedMinutes);
             }
-        } else {
+            // else: already at __:__, nothing to delete
+        } else if (!isHoursOnly) {
             if (minutesBuffer.length > 0) {
+                // Remove last character from buffer
                 setMinutesBuffer(prev => prev.slice(0, -1));
-            } else {
-                // Clear committed minutes
+            } else if (committedMinutes !== '00') {
+                // Move committed value back to buffer with rightmost digit removed
+                // e.g., "45" → "_4" (buffer = "4")
+                const leftDigit = committedMinutes[0];
                 setCommittedMinutes('00');
-                onChange(`${committedHours}:00`);
+                setMinutesBuffer(leftDigit === '0' ? '' : leftDigit);
+                notifyChange(committedHours, '00');
+            } else {
+                // At __:__, move focus to hours
+                setActiveSection('hours');
             }
         }
     };
 
     // Switch active section
     const switchSection = (section) => {
-        if (disabled) return;
+        if (disabled || isHoursOnly) return;
 
         // Commit current buffer before switching
-        if (activeSection !== section) {
-            commitBuffer(activeSection);
-            setActiveSection(section);
+        if (activeSection === 'hours' && hoursBuffer) {
+            const paddedHours = hoursBuffer.padStart(2, '0');
+            setCommittedHours(paddedHours);
+            setHoursBuffer('');
+            notifyChange(paddedHours, committedMinutes);
+        } else if (activeSection === 'minutes' && minutesBuffer) {
+            const paddedMinutes = minutesBuffer.padStart(2, '0');
+            setCommittedMinutes(paddedMinutes);
+            setMinutesBuffer('');
+            notifyChange(committedHours, paddedMinutes);
         }
+
+        setActiveSection(section);
+    };
+
+    // Get final values (committing any pending buffers)
+    const getFinalValues = () => {
+        let finalHours = committedHours;
+        let finalMinutes = committedMinutes;
+
+        if (hoursBuffer) {
+            finalHours = hoursBuffer.padStart(2, '0');
+        }
+        if (minutesBuffer && !isHoursOnly) {
+            finalMinutes = minutesBuffer.padStart(2, '0');
+        }
+
+        return { finalHours, finalMinutes };
     };
 
     // Expose methods to parent via ref
@@ -170,61 +184,26 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
         handleBackspace: handleBackspaceAction,
         focus: () => containerRef.current?.focus(),
         getCurrentValue: () => {
-            // Return current value with any uncommitted buffers padded and committed
-            let finalHours = committedHours;
-            let finalMinutes = committedMinutes;
-
-            if (hoursBuffer) {
-                const paddedHours = hoursBuffer.padStart(2, '0');
-                const hourNum = parseInt(paddedHours, 10);
-                finalHours = hourNum <= 23 ? paddedHours : '23';
-            }
-
-            if (minutesBuffer) {
-                const paddedMinutes = minutesBuffer.padStart(2, '0');
-                const minuteNum = parseInt(paddedMinutes, 10);
-                finalMinutes = minuteNum <= 59 ? paddedMinutes : '59';
-            }
-
-            // In hours-only mode, return just the hours
-            if (mode === 'hours-only') {
-                return finalHours;
-            }
-
-            return `${finalHours}:${finalMinutes}`;
+            const { finalHours, finalMinutes } = getFinalValues();
+            return formatValue(finalHours, finalMinutes);
         },
         commitAndSubmit: () => {
-            // Commit both buffers
-            let finalHours = committedHours;
-            let finalMinutes = committedMinutes;
+            const { finalHours, finalMinutes } = getFinalValues();
 
-            if (hoursBuffer) {
-                const paddedHours = hoursBuffer.padStart(2, '0');
-                const hourNum = parseInt(paddedHours, 10);
-                finalHours = hourNum <= 23 ? paddedHours : '23';
-                setCommittedHours(finalHours);
-                setHoursBuffer('');
-            }
+            // Update state
+            setCommittedHours(finalHours);
+            setCommittedMinutes(finalMinutes);
+            setHoursBuffer('');
+            setMinutesBuffer('');
 
-            if (minutesBuffer) {
-                const paddedMinutes = minutesBuffer.padStart(2, '0');
-                const minuteNum = parseInt(paddedMinutes, 10);
-                finalMinutes = minuteNum <= 59 ? paddedMinutes : '59';
-                setCommittedMinutes(finalMinutes);
-                setMinutesBuffer('');
-            }
-
-            // In hours-only mode, return just the hours and auto-submit
-            if (mode === 'hours-only') {
-                onChange(finalHours);
-                if (onSubmit) {
-                    onSubmit(finalHours);
-                }
-                return finalHours;
-            }
-
-            const finalValue = `${finalHours}:${finalMinutes}`;
+            // Notify parent
+            const finalValue = formatValue(finalHours, finalMinutes);
             onChange(finalValue);
+
+            if (onSubmit) {
+                onSubmit(finalValue);
+            }
+
             return finalValue;
         }
     }));
@@ -234,7 +213,6 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
         const handleKeyDown = (e) => {
             if (disabled) return;
 
-            // Only handle if the container is focused or if we're targeting the document
             if (!containerRef.current?.contains(document.activeElement) &&
                 e.target !== document.body &&
                 e.target !== containerRef.current) {
@@ -247,65 +225,50 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
             } else if (e.key === 'Backspace') {
                 e.preventDefault();
                 handleBackspaceAction();
-            } else if (e.key === 'ArrowLeft') {
+            } else if (e.key === 'ArrowLeft' && !isHoursOnly) {
                 e.preventDefault();
-                if (mode === 'full-time') {
-                    switchSection('hours');
-                }
-            } else if (e.key === 'ArrowRight') {
+                switchSection('hours');
+            } else if (e.key === 'ArrowRight' && !isHoursOnly) {
                 e.preventDefault();
-                if (mode === 'full-time') {
-                    switchSection('minutes');
-                }
+                switchSection('minutes');
             } else if (e.key === 'Enter' && onSubmit) {
                 e.preventDefault();
-                // Commit both buffers before submitting
-                let finalHours = committedHours;
-                let finalMinutes = committedMinutes;
+                const { finalHours, finalMinutes } = getFinalValues();
 
-                if (hoursBuffer) {
-                    const paddedHours = hoursBuffer.padStart(2, '0');
-                    const hourNum = parseInt(paddedHours, 10);
-                    finalHours = hourNum <= 23 ? paddedHours : '23';
-                    setCommittedHours(finalHours);
-                    setHoursBuffer('');
-                }
+                setCommittedHours(finalHours);
+                setCommittedMinutes(finalMinutes);
+                setHoursBuffer('');
+                setMinutesBuffer('');
 
-                if (minutesBuffer) {
-                    const paddedMinutes = minutesBuffer.padStart(2, '0');
-                    const minuteNum = parseInt(paddedMinutes, 10);
-                    finalMinutes = minuteNum <= 59 ? paddedMinutes : '59';
-                    setCommittedMinutes(finalMinutes);
-                    setMinutesBuffer('');
-                }
-
-                // Update parent with final committed values
-                const finalValue = `${finalHours}:${finalMinutes}`;
+                const finalValue = formatValue(finalHours, finalMinutes);
                 onChange(finalValue);
-
-                // Pass the final value directly to onSubmit
                 onSubmit(finalValue);
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [disabled, activeSection, hoursBuffer, minutesBuffer, committedHours, committedMinutes, onSubmit]);
+    }, [disabled, activeSection, hoursBuffer, minutesBuffer, committedHours, committedMinutes, onSubmit, isHoursOnly]);
 
-    // Update buffers when value prop changes (from parent)
+    // Update when value prop changes from parent
+    // Only sync if we don't have active buffers (to avoid overwriting user input)
     useEffect(() => {
-        const newTime = parseTime(value || '00:00');
+        // Don't sync if user is actively typing (has buffer content)
+        if (hoursBuffer || minutesBuffer) {
+            return;
+        }
+
+        const newTime = parseTime(value);
         setCommittedHours(newTime.hours);
         setCommittedMinutes(newTime.minutes);
-        setHoursBuffer('');
-        setMinutesBuffer('');
-        // Reset to hours section only when the value is reset to 00:00
-        if (newTime.hours === '00' && newTime.minutes === '00') {
+
+        // Reset to initial state when value is reset to default
+        const isDefaultValue = newTime.hours === '00' && newTime.minutes === '00';
+        if (isDefaultValue) {
             setActiveSection('hours');
             setUserHasInteracted(false);
         }
-    }, [value]);
+    }, [value, isHoursOnly, hoursBuffer, minutesBuffer]);
 
     // Auto-focus on mount
     useEffect(() => {
@@ -316,38 +279,61 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
     useEffect(() => {
         if (status === 'wrong') {
             setActiveSection('hours');
-            // Optional: focus the container so keyboard inputs go there
             containerRef.current?.focus();
         }
     }, [status]);
 
-
-    // Get display value for each section
+    // Get display value for hours
     const getHoursDisplay = () => {
-        if (hoursBuffer) return hoursBuffer.padStart(2, '_');
-        // Show __ only when user hasn't interacted yet and value is 00
-        if (!userHasInteracted && committedHours === '00') return '__';
+        if (hoursBuffer) {
+            // Show buffer as-is, pad with underscore only if needed
+            return hoursBuffer.padStart(2, '_');
+        }
+        if (!userHasInteracted && committedHours === '00') {
+            return '__';
+        }
         return committedHours;
     };
 
+    // Get display value for minutes
     const getMinutesDisplay = () => {
-        if (minutesBuffer) return minutesBuffer.padStart(2, '_');
-        // Show __ only when user hasn't interacted yet and value is 00
-        if (!userHasInteracted && committedMinutes === '00') return '__';
+        if (isHoursOnly) {
+            return '00'; // Always show 00 in hours-only mode
+        }
+
+        if (minutesBuffer) {
+            // Show buffer as-is, pad with underscore only if needed
+            return minutesBuffer.padStart(2, '_');
+        }
+        if (!userHasInteracted && committedMinutes === '00') {
+            return '__';
+        }
         return committedMinutes;
     };
 
+    // Styling helpers
+    const getBackgroundColor = () => {
+        if (status === 'correct') return '#d4edda';
+        if (status === 'wrong') return '#f8d7da';
+        return 'white';
+    };
+
+    const getActiveSectionColor = () => {
+        if (status === 'correct' || status === 'wrong') return 'transparent';
+        return '#e3f2fd';
+    };
+
     return (
-        <Box
+        <div
             ref={containerRef}
             data-testid="time-input-container"
             tabIndex={disabled ? -1 : 0}
             className={`time-input ${status === 'correct' ? 'status-correct' : ''} ${status === 'wrong' ? 'status-wrong' : ''}`}
-            sx={{
+            style={{
                 width: 100,
                 height: 48,
-                bgcolor: getBackgroundColor(),
-                borderRadius: 1,
+                backgroundColor: getBackgroundColor(),
+                borderRadius: 4,
                 border: '1px solid #ccc',
                 transition: 'background-color 0.4s ease',
                 display: 'flex',
@@ -358,118 +344,100 @@ const TimeInput = forwardRef(({ value, onChange, onSubmit, disabled, status, mod
                 cursor: disabled ? 'not-allowed' : 'text',
                 opacity: disabled ? 0.6 : 1,
                 outline: 'none',
-                '&:focus': {
-                    borderColor: '#1976d2',
-                    boxShadow: '0 0 0 2px rgba(25, 118, 210, 0.2)',
-                },
             }}
             onClick={() => !disabled && containerRef.current?.focus()}
+            onFocus={(e) => {
+                if (!disabled) {
+                    e.currentTarget.style.borderColor = '#1976d2';
+                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(25, 118, 210, 0.2)';
+                }
+            }}
+            onBlur={(e) => {
+                e.currentTarget.style.borderColor = '#ccc';
+                e.currentTarget.style.boxShadow = 'none';
+            }}
         >
             {/* Hours Section */}
-            <Box
-                ref={hoursRef}
+            <div
                 data-testid="hours-section"
                 onClick={(e) => {
                     e.stopPropagation();
                     !disabled && switchSection('hours');
                 }}
-                sx={{
+                style={{
                     flex: 1,
                     textAlign: 'right',
-                    py: 0.25,
-                    px: 0.5,
-                    bgcolor: activeSection === 'hours' ? getActiveSectionColor() : 'transparent',
-                    borderRadius: 1,
+                    padding: '2px 4px',
+                    backgroundColor: activeSection === 'hours' ? getActiveSectionColor() : 'transparent',
+                    borderRadius: 4,
                     transition: 'background-color 0.2s ease',
                     cursor: disabled ? 'not-allowed' : 'pointer',
-                    position: 'relative',
-                    '&:hover': {
-                        bgcolor: !disabled && activeSection !== 'hours' ? '#f5f5f5' : undefined,
-                    },
+                    fontWeight: 'bold',
+                    color: disabled ? '#666' : '#000',
+                    fontFamily: 'monospace',
+                }}
+                onMouseEnter={(e) => {
+                    if (!disabled && activeSection !== 'hours') {
+                        e.currentTarget.style.backgroundColor = '#f5f5f5';
+                    }
+                }}
+                onMouseLeave={(e) => {
+                    if (activeSection !== 'hours') {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                    }
                 }}
             >
-                <Typography
-                    component="span"
-                    sx={{
-                        fontWeight: 'bold',
-                        color: disabled ? '#666' : '#000',
-                        fontFamily: 'monospace',
-                        letterSpacing: '0',
-                    }}
-                >
-                    {getHoursDisplay()}
-                </Typography>
-            </Box>
+                {getHoursDisplay()}
+            </div>
 
             {/* Colon Separator */}
-            <Box
+            <div
                 data-testid="time-input-display"
-                sx={{
-                    px: 0.5,
+                style={{
+                    padding: '0 4px',
                     color: disabled ? '#999' : '#666',
                     fontWeight: 'bold',
                 }}
             >
                 :
-            </Box>
+            </div>
 
-            {/* Minutes Section - Always visible in hours-only mode, fixed to 00 */}
-            {mode === 'hours-only' ? (
-                <Box
-                    data-testid="minutes-section"
-                    sx={{
-                        flex: 1,
-                        textAlign: 'left',
-                        py: 0.25,
-                        px: 0.5,
-                        bgcolor: 'transparent',
-                        borderRadius: 1,
-                        color: '#999', // Greyed out color
-                        fontWeight: 'bold',
-                        fontFamily: 'monospace',
-                        letterSpacing: '0',
-                        userSelect: 'none',
-                        pointerEvents: 'none', // Disable interaction
-                    }}
-                >
-                    00
-                </Box>
-            ) : (
-                <Box
-                    ref={minutesRef}
-                    data-testid="minutes-section"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        !disabled && switchSection('minutes');
-                    }}
-                    sx={{
-                        flex: 1,
-                        textAlign: 'left',
-                        py: 0.25,
-                        px: 0.5,
-                        bgcolor: activeSection === 'minutes' ? getActiveSectionColor() : 'transparent',
-                        borderRadius: 1,
-                        transition: 'background-color 0.2s ease',
-                        cursor: disabled ? 'not-allowed' : 'pointer',
-                        '&:hover': {
-                            bgcolor: !disabled && activeSection !== 'minutes' ? '#f5f5f5' : undefined,
-                        },
-                    }}
-                >
-                    <Typography
-                        component="span"
-                        sx={{
-                            fontWeight: 'bold',
-                            color: disabled ? '#666' : '#000',
-                            fontFamily: 'monospace',
-                            letterSpacing: '0',
-                        }}
-                    >
-                        {getMinutesDisplay()}
-                    </Typography>
-                </Box>
-            )}
-        </Box>
+            {/* Minutes Section */}
+            <div
+                data-testid="minutes-section"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (!disabled && !isHoursOnly) {
+                        switchSection('minutes');
+                    }
+                }}
+                style={{
+                    flex: 1,
+                    textAlign: 'left',
+                    padding: '2px 4px',
+                    backgroundColor: !isHoursOnly && activeSection === 'minutes' ? getActiveSectionColor() : 'transparent',
+                    borderRadius: 4,
+                    transition: 'background-color 0.2s ease',
+                    cursor: isHoursOnly ? 'default' : (disabled ? 'not-allowed' : 'pointer'),
+                    fontWeight: 'bold',
+                    color: isHoursOnly ? '#999' : (disabled ? '#666' : '#000'),
+                    fontFamily: 'monospace',
+                    pointerEvents: isHoursOnly ? 'none' : 'auto',
+                }}
+                onMouseEnter={(e) => {
+                    if (!disabled && !isHoursOnly && activeSection !== 'minutes') {
+                        e.currentTarget.style.backgroundColor = '#f5f5f5';
+                    }
+                }}
+                onMouseLeave={(e) => {
+                    if (!isHoursOnly && activeSection !== 'minutes') {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                }}
+            >
+                {getMinutesDisplay()}
+            </div>
+        </div>
     );
 });
 

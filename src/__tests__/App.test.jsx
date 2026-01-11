@@ -6,7 +6,7 @@ describe('App (Landing Page)', () => {
   describe('Basic Rendering', () => {
     it('renders without crashing', () => {
       render(<App />);
-      expect(screen.getByText('Gry dla XY')).toBeInTheDocument();
+      expect(screen.getByText('Cześć!')).toBeInTheDocument();
     });
 
     it('shows navigation menu', () => {

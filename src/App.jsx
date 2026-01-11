@@ -167,7 +167,7 @@ function AppContent() {
                         color="inherit"
                         sx={{textDecoration: 'none'}}
                     >
-                        Gry dla XY
+                        Cześć!
                     </Typography>
                 </Toolbar>
             </AppBar>

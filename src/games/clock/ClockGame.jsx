@@ -91,15 +91,28 @@ function ClockGame({ config, progressRef }) {
     };
 
 
-    // Function to add digits to the answer
-    const addDigit = (digit) => {
-        setAnswer(prev => {
-            if (replaceOnNextInput.current) {
-                replaceOnNextInput.current = false;
-                return digit;
+    // Handle TimeInput onChange events
+    const handleTimeInputChange = (newValue) => {
+        setAnswer(newValue);
+    };
+
+    // Handle virtual keyboard input
+    const handleVirtualKeyPress = (button) => {
+        if (status === 'correct') return;
+
+        if (button === '{bksp}') {
+            inputRef.current?.handleBackspace();
+        } else if (button === '{enter}') {
+            // Get the committed value from TimeInput (with buffers committed and padded)
+            const finalValue = inputRef.current?.commitAndSubmit();
+            if (finalValue) {
+                setAnswer(finalValue);
+                handleSubmit();
             }
-            return prev.length < 2 ? prev + digit : prev;
-        });
+        } else if (/^[0-9]$/.test(button)) {
+            // Forward digit to TimeInput
+            inputRef.current?.handleDigit(button);
+        }
     };
 
     // Reset visual error state
@@ -123,24 +136,30 @@ function ClockGame({ config, progressRef }) {
         keyboardRef.current?.setInput(answer);
     }, [answer]);
 
-    // Physical keyboard support
+    // Physical keyboard support - only for direct input, not virtual keyboard
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (status === 'correct') return;
 
             if (e.key >= '0' && e.key <= '9') {
                 e.preventDefault();
-                addDigit(e.key);
+                // For physical keyboard, we'll let TimeInput handle it through its own keydown handler
+                // But if we need direct input, we can call the ref method
+                inputRef.current?.handleDigit(e.key);
             }
 
             if (e.key === 'Backspace') {
                 e.preventDefault();
-                setAnswer(prev => prev.slice(0, -1));
+                inputRef.current?.handleBackspace();
             }
 
             if (e.key === 'Enter') {
                 e.preventDefault();
-                handleSubmit();
+                const finalValue = inputRef.current?.commitAndSubmit();
+                if (finalValue) {
+                    setAnswer(finalValue);
+                    handleSubmit();
+                }
             }
         };
 
@@ -195,23 +214,7 @@ function ClockGame({ config, progressRef }) {
                             buttons: '{enter}',
                         },
                     ]}
-                    onKeyPress={(button) => {
-                        if (status === 'correct') return;
-
-                        if (button === '{bksp}') {
-                            inputRef.current?.handleBackspace();
-                        } else if (button === '{enter}') {
-                            // TimeInput will handle submission automatically in hours-only mode
-                            // But we'll also call handleSubmit for compatibility
-                            const currentValue = inputRef.current?.getCurrentValue();
-                            if (currentValue) {
-                                setAnswer(currentValue);
-                                handleSubmit();
-                            }
-                        } else {
-                            inputRef.current?.handleDigit(button);
-                        }
-                    }}
+                    onKeyPress={handleVirtualKeyPress}
                 />
             </Box>
         </Box>
