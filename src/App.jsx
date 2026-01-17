@@ -37,16 +37,21 @@ const gameConfig = {
                 id: 'add-sub',
                 levels: [
                     {coefficients: 2, operations: ['+', '-'], range: 10},
-                    {coefficients: 2, operations: ['+', '-'], range: 20},
                     {coefficients: 3, operations: ['+', '-'], range: 10},
+                    {coefficients: 2, operations: ['+', '-'], range: 20},
                     {coefficients: 3, operations: ['+', '-'], range: 20},
+                    {coefficients: 2, operations: ['+', '-'], range: 50},
+                    {coefficients: 3, operations: ['+', '-'], range: 50},
                 ]
             },
             {
                 title: 'Mnożenie',
                 id: 'mul',
                 levels: [
-                    {coefficients: 2, operations: ['*'], range: 10}
+                    {coefficients: 2, operations: ['*'], range: 10},
+                    {coefficients: 2, operations: ['*'], range: 20},
+                    {coefficients: 2, operations: ['*'], range: 50},
+                    {coefficients: 3, operations: ['*'], range: 50},
                 ]
             }
         ]
