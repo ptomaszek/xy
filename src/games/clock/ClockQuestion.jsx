@@ -1,10 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Box } from '@mui/material';
-
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { TimeField } from '@mui/x-date-pickers/TimeField';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { enUS } from 'date-fns/locale';
+import { Box, TextField } from '@mui/material';
 
 import StyledClock from './StyledClock';
 import useClockQuestion from './useClockQuestion';
@@ -15,19 +10,45 @@ import NumericKeyboard from '../../components/keyboards/NumericKeyboard';
    ========================= */
 
 /**
- * Validates input hour and converts it to analog hour (1–12).
+ * Normalizes input hour to 24-hour format and validates it.
  * Returns:
- *   - number (1–12) if valid
+ *   - number (0-24) if valid
  *   - null if invalid
  */
-const normalizeAnalogHour = (value) => {
+const normalizeHourInput = (value) => {
     const hour = Number(value);
     if (!Number.isInteger(hour)) return null;
-    if (hour < 0 || hour > 24) return null;
+    if (hour < 0 || hour > 99) return null;
 
-    // Analog clocks are modulo-12 systems
-    const analog = hour % 12;
-    return analog === 0 ? 12 : analog;
+    // Normalize to 24-hour format (0-24)
+    const normalized = hour % 24;
+    return normalized;
+};
+
+/**
+ * Gets all valid 24-hour equivalents for an analog clock hour (1-12)
+ */
+const getValidEquivalents = (analogHour) => {
+    const equivalents = [];
+
+    // Direct mapping: 1-11, 12
+    if (analogHour >= 1 && analogHour <= 11) {
+        equivalents.push(analogHour);
+        equivalents.push(analogHour + 12);
+    } else if (analogHour === 12) {
+        equivalents.push(0, 12, 24);
+    }
+
+    // Add zero-padded versions for display consistency
+    const paddedEquivalents = [];
+    for (const eq of equivalents) {
+        paddedEquivalents.push(eq);
+        if (eq < 10 && eq !== 0) {
+            paddedEquivalents.push(eq * 10); // e.g., 6 -> 06
+        }
+    }
+
+    return paddedEquivalents;
 };
 
 function ClockQuestion({ progressRef }) {
@@ -57,9 +78,9 @@ function ClockQuestion({ progressRef }) {
     const submitAnswer = useCallback(() => {
         if (!input) return;
 
-        const normalized = normalizeAnalogHour(input);
+        const normalizedInput = normalizeHourInput(input);
 
-        if (normalized === null) {
+        if (normalizedInput === null) {
             progressRef.current?.handleIncorrectAnswer();
             setFeedback('wrong');
             replaceOnNextInput.current = true;
@@ -67,7 +88,13 @@ function ClockQuestion({ progressRef }) {
             return;
         }
 
-        if (normalized === correctAnswer) {
+        // Get all valid equivalents for the current analog clock hour
+        const validEquivalents = getValidEquivalents(correctAnswer);
+
+        // Check if the normalized input matches any valid equivalent
+        const isCorrect = validEquivalents.includes(normalizedInput);
+
+        if (isCorrect) {
             progressRef.current?.handleCorrectAnswer();
             setFeedback('correct');
 
@@ -168,23 +195,22 @@ function ClockQuestion({ progressRef }) {
                             pointerEvents: feedback !== 'neutral' ? 'none' : 'auto',
                         }}
                     >
-                        <LocalizationProvider dateAdapter={AdapterDateFns} locale={enUS}>
-                            <TimeField
-                                ref={inputRef}
-                                value={input ? new Date(0, 0, 0, Number(input)) : null}
-                                format="HH"
-
-                                sx={{
-                                    width: 120,
-                                    '& input': {
-                                        textAlign: 'center',
-                                        fontSize: '1.6rem',
-                                        fontWeight: 600,
-                                        letterSpacing: '0.1em',
-                                    },
-                                }}
-                            />
-                        </LocalizationProvider>
+                        <TextField
+                            ref={inputRef}
+                            value={input}
+                            inputProps={{
+                                style: {
+                                    textAlign: 'center',
+                                    fontSize: '1.6rem',
+                                    fontWeight: 600,
+                                    letterSpacing: '0.1em',
+                                },
+                                readOnly: true,
+                            }}
+                            sx={{
+                                width: 120,
+                            }}
+                        />
                     </Box>
 
                     <NumericKeyboard
