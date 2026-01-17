@@ -6,7 +6,7 @@ import LevelInfo from './LevelInfo';
 import LevelProgressTracker from '../../LevelProgressTracker';
 import MathQuestion from './MathQuestion';
 
-function MathGame({ config }) {
+function MathGame({ config, nextPath }) {
     const { level } = config;
     const progressRef = useRef(null);
     const navigate = useNavigate();
@@ -16,15 +16,7 @@ function MathGame({ config }) {
 
     /* ===================== Handle next level ===================== */
     const handleNextLevel = () => {
-        const path = window.location.hash;
-        const levelMatch = path.match(/\/levels\/(\d+)/);
-        if (levelMatch) {
-            const currentLevel = parseInt(levelMatch[1]);
-            const nextLevel = currentLevel + 1;
-            navigate(`/games/math/levels/${nextLevel}`, { replace: true });
-        } else {
-            navigate('/games/math', { replace: true });
-        }
+        navigate(nextPath, { replace: true });
     };
 
     return (

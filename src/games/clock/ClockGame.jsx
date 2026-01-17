@@ -6,12 +6,12 @@ import LevelInfo from './LevelInfo';
 import LevelProgressTracker from '../../LevelProgressTracker';
 import ClockQuestion from './ClockQuestion';
 
-function ClockGame({ config }) {
+function ClockGame({ config, nextPath }) {
     const progressRef = useRef(null);
     const navigate = useNavigate();
 
     const handleNextLevel = () => {
-        navigate('/', { replace: true });
+        navigate(nextPath, { replace: true });
     };
 
     return (

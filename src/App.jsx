@@ -174,6 +174,18 @@ function AppContent() {
         setMobileOpen(o => !o);
     };
 
+    // Calculate all levels in order to determine "next" level
+    const allLevelRoutes = Object.entries(gameConfig).flatMap(([gameKey, game]) =>
+        game.groups.flatMap(group =>
+            group.levels.map((config, index) => ({
+                path: `${game.path}/${group.id}/levels/${index + 1}`,
+                gameKey,
+                config,
+                index
+            }))
+        )
+    );
+
     const drawer = (
         <Box sx={{width: 240}}>
             <Toolbar/>
@@ -259,29 +271,24 @@ function AppContent() {
                         }
                     />
 
-                    {gameConfig.math.groups.flatMap(group =>
-                        group.levels.map((config, index) => (
-                            <Route
-                                key={`${group.id}-${index}`}
-                                path={`${gameConfig.math.path}/${group.id}/levels/${index + 1}`}
-                                element={<MathGame config={{ ...config, level: index + 1 }} progressRef={progressRef} />}
-                            />
-                        ))
-                    )}
+                    {allLevelRoutes.map((route, i) => {
+                        const nextPath = allLevelRoutes[i + 1]?.path || '/';
+                        const GameComponent = route.gameKey === 'math' ? MathGame : ClockGame;
 
-                    {gameConfig.clock.groups.flatMap(group =>
-                        group.levels.map((config, index) => (
+                        return (
                             <Route
-                                key={`${group.id}-${index}`}
-                                path={`${gameConfig.clock.path}/${group.id}/levels/${index + 1}`}
+                                key={route.path}
+                                path={route.path}
                                 element={
-                                    <ClockGame
-                                        config={{ ...config, level: index + 1 }}
+                                    <GameComponent
+                                        config={{ ...route.config, level: route.index + 1 }}
+                                        nextPath={nextPath}
+                                        progressRef={progressRef}
                                     />
                                 }
                             />
-                        ))
-                    )}
+                        );
+                    })}
 
                 </Routes>
             </Box>
