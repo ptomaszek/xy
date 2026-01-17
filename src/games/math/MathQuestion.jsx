@@ -64,7 +64,11 @@ function MathQuestion({ config, progressRef }) {
             setInputBg('#f8d7da');
             replaceOnNextInput.current = true;
             progressRef.current?.handleIncorrectAnswer();
-            focusAndSelectInput();
+
+            // Add short-lived blocking period for wrong answers
+            setTimeout(() => {
+                focusAndSelectInput();
+            }, 300);
         }
     };
 
@@ -101,7 +105,7 @@ function MathQuestion({ config, progressRef }) {
     /** Physical keyboard support */
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (status === 'correct') return;
+            if (status === 'correct' || status === 'wrong') return;
 
             if (/^\d$/.test(e.key)) addDigit(e.key);
             else if (e.key === 'Backspace') setAnswer(prev => prev.slice(0, -1));
@@ -136,7 +140,7 @@ function MathQuestion({ config, progressRef }) {
                     <AnswerInput
                         ref={inputRef}
                         value={answer}
-                        disabled={status in ['correct']}
+                        disabled={status === 'correct' || status === 'wrong'}
                         bgcolor={inputBg}
                     />
                 </Box>
