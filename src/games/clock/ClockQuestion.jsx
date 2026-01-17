@@ -190,7 +190,7 @@ function ClockQuestion({ progressRef }) {
                 </Box>
 
                 <NumericKeyboard
-                    width={180}
+                    width={260}
                     onKeyPress={handleVirtualKey}
                 />
             </Box>
