@@ -1,24 +1,20 @@
-// src/games/math/MathQuestion.js
-import React, {useState, useEffect, useRef, useCallback} from 'react';
-import {TextField, Box, Typography} from '@mui/material';
-import Keyboard from 'react-simple-keyboard';
-import 'react-simple-keyboard/build/css/index.css';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { TextField, Box, Typography } from '@mui/material';
 
 import QuestionGenerator from './QuestionGenerator';
 import KaTeXComponents from './KaTeXComponents';
+import NumericKeyboard from '../../components/keyboards/NumericKeyboard';
 
-function MathQuestion({config, progressRef}) {
-    const {coefficients, operations, range} = config;
+function MathQuestion({ config, progressRef }) {
+    const { coefficients, operations, range } = config;
 
     const [answer, setAnswer] = useState('');
-    const [status, setStatus] = useState('idle'); // idle | correct | wrong
+    const [status, setStatus] = useState('idle');
     const [inputBg, setInputBg] = useState('white');
     const [fade, setFade] = useState(true);
 
     const inputRef = useRef(null);
     const keyboardRef = useRef(null);
-
-    /** If true, next digit replaces entire value */
     const replaceOnNextInput = useRef(false);
 
     const focusAndSelectInput = useCallback(() => {
@@ -42,7 +38,7 @@ function MathQuestion({config, progressRef}) {
         },
     });
 
-    const {correctAnswer, latexExpression, generateQuestion} = questionGenerator;
+    const { correctAnswer, latexExpression, generateQuestion } = questionGenerator;
 
     const handleSubmit = () => {
         if (!answer || status === 'correct') return;
@@ -71,7 +67,6 @@ function MathQuestion({config, progressRef}) {
         }
     };
 
-    /** Reset visual error state */
     useEffect(() => {
         if (status === 'wrong') {
             const timer = setTimeout(() => {
@@ -107,20 +102,9 @@ function MathQuestion({config, progressRef}) {
         const handleKeyDown = (e) => {
             if (status === 'correct') return;
 
-            if (e.key >= '0' && e.key <= '9') {
-                e.preventDefault();
-                addDigit(e.key);
-            }
-
-            if (e.key === 'Backspace') {
-                e.preventDefault();
-                setAnswer(prev => prev.slice(0, -1));
-            }
-
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSubmit();
-            }
+            if (/^\d$/.test(e.key)) addDigit(e.key);
+            else if (e.key === 'Backspace') setAnswer(prev => prev.slice(0, -1));
+            else if (e.key === 'Enter') handleSubmit();
         };
 
         window.addEventListener('keydown', handleKeyDown);
@@ -140,23 +124,19 @@ function MathQuestion({config, progressRef}) {
                 <Box
                     display="flex"
                     alignItems="center"
-                    justifyContent="center"   // 👈 center horizontally
+                    justifyContent="center"
                     gap={2}
                     mb={2}
-                    sx={{
-                        width: '100%',        // 👈 take full row width
-                        textAlign: 'center',
-                    }}
                 >
                     <Typography variant="h5">
-                        <KaTeXComponents math={latexExpression}/>
+                        <KaTeXComponents math={latexExpression} />
                     </Typography>
 
                     <TextField
                         ref={inputRef}
                         value={answer}
                         disabled={status === 'correct'}
-                        inputProps={{readOnly: true}} // blocks mobile keyboard
+                        inputProps={{ readOnly: true }}
                         sx={{
                             width: 70,
                             '& .MuiOutlinedInput-root': {
@@ -168,52 +148,17 @@ function MathQuestion({config, progressRef}) {
                 </Box>
             </Box>
 
-            {/* On-screen keyboard */}
-            <Box
-                mt={2}
-                sx={{
-                    width: 260,          // 👈 fixed keyboard width
-                    maxWidth: '100%',
+            <NumericKeyboard
+                width={260}
+                status={status}
+                keyboardRef={(r) => (keyboardRef.current = r)}
+                onKeyPress={(key) => {
+                    if (status === 'correct') return;
+                    if (key === '{bksp}') setAnswer(prev => prev.slice(0, -1));
+                    else if (key === '{enter}') handleSubmit();
+                    else addDigit(key);
                 }}
-            >
-                <Keyboard
-                    keyboardRef={(r) => (keyboardRef.current = r)}
-                    layout={{
-                        default: [
-                            '1 2 3',
-                            '4 5 6',
-                            '7 8 9',
-                            '{bksp} 0 {enter}',
-                        ],
-                    }}
-                    display={{
-                        '{bksp}': '⌫',
-                        '{enter}': 'OK',
-                    }}
-                    buttonTheme={[
-                        {
-                            class:
-                                status === 'correct'
-                                    ? 'hg-ok-correct'
-                                    : status === 'wrong'
-                                        ? 'hg-ok-wrong'
-                                        : 'hg-ok-idle',
-                            buttons: '{enter}',
-                        },
-                    ]}
-                    onKeyPress={(button) => {
-                        if (status === 'correct') return;
-
-                        if (button === '{bksp}') {
-                            setAnswer(prev => prev.slice(0, -1));
-                        } else if (button === '{enter}') {
-                            handleSubmit();
-                        } else {
-                            addDigit(button);
-                        }
-                    }}
-                />
-            </Box>
+            />
         </Box>
     );
 }

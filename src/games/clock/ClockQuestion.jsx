@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Box } from '@mui/material';
-import Keyboard from 'react-simple-keyboard';
-import 'react-simple-keyboard/build/css/index.css';
 
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { TimeField } from '@mui/x-date-pickers/TimeField';
@@ -10,6 +8,7 @@ import { enUS } from 'date-fns/locale';
 
 import StyledClock from './StyledClock';
 import useClockQuestion from './useClockQuestion';
+import NumericKeyboard from '../../components/keyboards/NumericKeyboard';
 
 /* =========================
    HOUR VALIDATION + NORMALIZATION
@@ -23,7 +22,6 @@ import useClockQuestion from './useClockQuestion';
  */
 const normalizeAnalogHour = (value) => {
     const hour = Number(value);
-
     if (!Number.isInteger(hour)) return null;
     if (hour < 0 || hour > 24) return null;
 
@@ -46,17 +44,11 @@ function ClockQuestion({ progressRef }) {
         onQuestionGenerated: () => setInput(''),
     });
 
-    /* -----------------------------
-       INIT
-    ----------------------------- */
     useEffect(() => {
         generateQuestion();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    /* -----------------------------
-       SUBMIT
-    ----------------------------- */
     const submitAnswer = useCallback(() => {
         if (!input) return;
 
@@ -85,9 +77,6 @@ function ClockQuestion({ progressRef }) {
         }
     }, [input, correctAnswer, generateQuestion, progressRef]);
 
-    /* -----------------------------
-       PHYSICAL KEYBOARD
-    ----------------------------- */
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (feedback !== 'neutral') return;
@@ -98,14 +87,12 @@ function ClockQuestion({ progressRef }) {
             }
 
             if (e.key === 'Backspace') {
-                setInput((prev) => prev.slice(0, -1));
+                setInput(prev => prev.slice(0, -1));
                 return;
             }
 
             if (/^\d$/.test(e.key)) {
-                setInput((prev) =>
-                    prev.length < 2 ? prev + e.key : prev
-                );
+                setInput(prev => (prev.length < 2 ? prev + e.key : prev));
             }
         };
 
@@ -113,50 +100,23 @@ function ClockQuestion({ progressRef }) {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [submitAnswer, feedback]);
 
-    /* -----------------------------
-       VIRTUAL KEYBOARD
-    ----------------------------- */
     const handleVirtualKey = (key) => {
         if (feedback !== 'neutral') return;
 
-        if (key === '{enter}') {
-            submitAnswer();
-            return;
-        }
-
-        if (key === '{bksp}') {
-            setInput((prev) => prev.slice(0, -1));
-            return;
-        }
-
-        if (/^\d$/.test(key)) {
-            setInput((prev) =>
-                prev.length < 2 ? prev + key : prev
-            );
+        if (key === '{enter}') submitAnswer();
+        else if (key === '{bksp}') setInput(prev => prev.slice(0, -1));
+        else if (/^\d$/.test(key)) {
+            setInput(prev => (prev.length < 2 ? prev + key : prev));
         }
     };
 
     return (
-        <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-        >
-            {/* CLOCK */}
+        <Box display="flex" flexDirection="column" alignItems="center">
             <StyledClock currentTime={currentTime} />
 
-            {/* SMALL GAP */}
             <Box mt={1}>
-                {/* INPUT + KEYBOARD GROUP */}
-                <Box
-                    display="flex"
-                    flexDirection="column"
-                    alignItems="center"
-                    gap={3}
-                >
-                    {/* INPUT */}
+                <Box display="flex" flexDirection="column" alignItems="center" gap={3}>
                     <Box
-                        data-testid="time-input-container"
                         sx={{
                             borderRadius: 2,
                             padding: 1,
@@ -173,24 +133,14 @@ function ClockQuestion({ progressRef }) {
                                     : feedback === 'correct'
                                         ? '0 0 0 2px rgba(40, 167, 69, 0.4)'
                                         : 'none',
-                            transform:
-                                feedback === 'wrong' ? 'scale(0.95)' : 'scale(1)',
-                            pointerEvents:
-                                feedback !== 'neutral' ? 'none' : 'auto',
+                            pointerEvents: feedback !== 'neutral' ? 'none' : 'auto',
                         }}
                     >
-                        <LocalizationProvider
-                            dateAdapter={AdapterDateFns}
-                            locale={enUS}
-                        >
+                        <LocalizationProvider dateAdapter={AdapterDateFns} locale={enUS}>
                             <TimeField
-                                value={
-                                    input
-                                        ? new Date(0, 0, 0, Number(input))
-                                        : null
-                                }
+                                value={input ? new Date(0, 0, 0, Number(input)) : null}
                                 format="HH"
-                                readOnly
+
                                 sx={{
                                     width: 120,
                                     '& input': {
@@ -204,24 +154,10 @@ function ClockQuestion({ progressRef }) {
                         </LocalizationProvider>
                     </Box>
 
-                    {/* KEYBOARD */}
-                    <Box sx={{ width: 180 }}>
-                        <Keyboard
-                            layout={{
-                                default: [
-                                    '1 2 3',
-                                    '4 5 6',
-                                    '7 8 9',
-                                    '{bksp} 0 {enter}',
-                                ],
-                            }}
-                            display={{
-                                '{enter}': 'OK',
-                                '{bksp}': '⌫',
-                            }}
-                            onKeyPress={handleVirtualKey}
-                        />
-                    </Box>
+                    <NumericKeyboard
+                        width={180}
+                        onKeyPress={handleVirtualKey}
+                    />
                 </Box>
             </Box>
         </Box>
