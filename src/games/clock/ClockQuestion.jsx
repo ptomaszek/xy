@@ -11,26 +11,26 @@ import TimeInput from './TimeInput';
    ========================= */
 
 /**
- * Gets all valid input equivalents for an analog clock hour (1-12)
- * Returns exact input values that should be accepted (no normalization)
+ * Checks if user input is a valid equivalent for the given analog clock hour
+ * Returns true if the input matches any valid 24-hour equivalent
  */
-const getValidEquivalents = (analogHour) => {
-    const equivalents = [];
-
-    // Direct 24-hour equivalents
-    if (analogHour >= 1 && analogHour <= 11) {
-        equivalents.push(analogHour);      // 1-11
-        equivalents.push(analogHour + 12); // 13-23
-    } else if (analogHour === 12) {
-        equivalents.push(12, 24, 0, 0);  // 12, 24, 0, 0
+const isCorrectAnswer = (userInput, analogHour) => {
+    // Handle special case for hour 12
+    if (analogHour === 12) {
+        return userInput === 12 || userInput === 24 || userInput === 0;
     }
 
-    // Add zero-padded versions for single-digit hours (except 0)
-    if (analogHour >= 1 && analogHour <= 9) {
-        equivalents.push(analogHour * 10); // 01-09 (as 10-90)
+    // Check direct 24-hour equivalents (1-11 and 13-23)
+    if (userInput === analogHour || userInput === analogHour + 12) {
+        return true;
     }
 
-    return equivalents;
+    // Check zero-padded versions for single-digit hours (10-90 represent 01-09)
+    if (analogHour >= 1 && analogHour <= 9 && userInput === analogHour * 10) {
+        return true;
+    }
+
+    return false;
 };
 
 function ClockQuestion({ progressRef }) {
@@ -80,11 +80,8 @@ function ClockQuestion({ progressRef }) {
             return;
         }
 
-        // Get all valid equivalents for the current analog clock hour
-        const validEquivalents = getValidEquivalents(correctAnswer);
-
-        // Check if the raw input matches any valid equivalent
-        const isCorrect = validEquivalents.includes(userInput);
+        // Check if the user input is a valid equivalent for the analog clock hour
+        const isCorrect = isCorrectAnswer(userInput, correctAnswer);
 
         if (isCorrect) {
             progressRef.current?.handleCorrectAnswer();
