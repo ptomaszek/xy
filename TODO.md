@@ -18,5 +18,7 @@
    - czytanie: słowo i przedmioty do wyboru
 
 ## GENAIs
- - kat-coder-pro:free
- - 
+ - gemini-3-flash-preview
+ - gemini-3-pro-preview ?
+ - gemini-2.5-flash (edit z cline nie działa)
+- open router > devstral-2512-free

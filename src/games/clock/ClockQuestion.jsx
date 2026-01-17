@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Box } from '@mui/material';
 
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -33,6 +33,8 @@ const normalizeAnalogHour = (value) => {
 function ClockQuestion({ progressRef }) {
     const [input, setInput] = useState('');
     const [feedback, setFeedback] = useState('neutral'); // neutral | wrong | correct
+    const inputRef = useRef(null);
+    const replaceOnNextInput = useRef(false);
 
     const {
         currentTime,
@@ -41,7 +43,10 @@ function ClockQuestion({ progressRef }) {
     } = useClockQuestion({
         minHour: 1,
         maxHour: 12,
-        onQuestionGenerated: () => setInput(''),
+        onQuestionGenerated: () => {
+            setInput('');
+            replaceOnNextInput.current = false;
+        },
     });
 
     useEffect(() => {
@@ -57,7 +62,8 @@ function ClockQuestion({ progressRef }) {
         if (normalized === null) {
             progressRef.current?.handleIncorrectAnswer();
             setFeedback('wrong');
-            setTimeout(() => setFeedback('neutral'), 300);
+            replaceOnNextInput.current = true;
+            setTimeout(() => setFeedback('neutral'), 1000);
             return;
         }
 
@@ -73,7 +79,11 @@ function ClockQuestion({ progressRef }) {
         } else {
             progressRef.current?.handleIncorrectAnswer();
             setFeedback('wrong');
-            setTimeout(() => setFeedback('neutral'), 300);
+            replaceOnNextInput.current = true;
+            setTimeout(() => {
+                setFeedback('neutral');
+                focusAndSelectInput();
+            }, 1000);
         }
     }, [input, correctAnswer, generateQuestion, progressRef]);
 
@@ -92,7 +102,13 @@ function ClockQuestion({ progressRef }) {
             }
 
             if (/^\d$/.test(e.key)) {
-                setInput(prev => (prev.length < 2 ? prev + e.key : prev));
+                setInput(prev => {
+                    if (replaceOnNextInput.current) {
+                        replaceOnNextInput.current = false;
+                        return e.key;
+                    }
+                    return prev.length < 2 ? prev + e.key : prev;
+                });
             }
         };
 
@@ -100,13 +116,29 @@ function ClockQuestion({ progressRef }) {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [submitAnswer, feedback]);
 
+    const focusAndSelectInput = useCallback(() => {
+        const input = inputRef.current?.querySelector('input');
+        if (input) {
+            input.focus();
+            input.select();
+        }
+    }, []);
+
     const handleVirtualKey = (key) => {
         if (feedback !== 'neutral') return;
 
-        if (key === '{enter}') submitAnswer();
-        else if (key === '{bksp}') setInput(prev => prev.slice(0, -1));
-        else if (/^\d$/.test(key)) {
-            setInput(prev => (prev.length < 2 ? prev + key : prev));
+        if (key === '{enter}') {
+            submitAnswer();
+        } else if (key === '{bksp}') {
+            setInput(prev => prev.slice(0, -1));
+        } else if (/^\d$/.test(key)) {
+            setInput(prev => {
+                if (replaceOnNextInput.current) {
+                    replaceOnNextInput.current = false;
+                    return key;
+                }
+                return prev.length < 2 ? prev + key : prev;
+            });
         }
     };
 
@@ -138,6 +170,7 @@ function ClockQuestion({ progressRef }) {
                     >
                         <LocalizationProvider dateAdapter={AdapterDateFns} locale={enUS}>
                             <TimeField
+                                ref={inputRef}
                                 value={input ? new Date(0, 0, 0, Number(input)) : null}
                                 format="HH"
 
