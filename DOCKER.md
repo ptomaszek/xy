@@ -34,12 +34,12 @@ docker-compose down
 
 Build production image:
 ```bash
-docker build -t xy:prod .
+docker build -t gedu:prod .
 ```
 
 Run production container:
 ```bash
-docker run -p 5173:5173 xy:prod
+docker run -p 5173:5173 gedu:prod
 ```
 
 ## GitHub Pages Deployment

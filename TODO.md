@@ -1,4 +1,4 @@
-# xy
+# gedu
 
 ## TODO DEV
  - react-based custom input and keyboard for numbers to behave the same on every device and browser. maybe some are available

@@ -1,7 +1,7 @@
 # Project Guidelines for AI Development
 
 ## Project Overview
-This is a React-based educational game application called "xy" designed for learning math and time-telling skills. The project emphasizes simplicity, maintainability, and Docker-first development.
+This is a React-based educational game application called "gedu" designed for learning math and time-telling skills. The project emphasizes simplicity, maintainability, and Docker-first development.
 
 ## Developer Profile
 I am an experienced React web developer with a strong focus on simplicity, maintainability, and performance. I value clean code practices and modern development workflows.
