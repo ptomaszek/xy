@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { Box, Typography, TextField } from '@mui/material';
 
 /**
@@ -6,23 +6,30 @@ import { Box, Typography, TextField } from '@mui/material';
  * 
  * @param {Object} props
  * @param {string[]} props.sections - Array of sections to show, e.g., ['hh'], ['hh', 'mm'], ['hh', 'mm', 'ss']
- * @param {Object} props.values - Current values for each section, e.g., { hh: '12', mm: '30', ss: '05' }
+ * @param {Object|string} props.values - Current values for each section, e.g., { hh: '12', mm: '30' } or '12' (if only one section)
  * @param {string} props.activeSection - The section currently being edited ('hh', 'mm', or 'ss')
  * @param {string} [props.bgcolor='white'] - Background color for the inputs
  * @param {boolean} [props.disabled=false] - Whether the input is disabled
- * @param {Function} [props.onSectionClick] - Callback when a section is clicked (to change activeSection)
+ * @param {Function} [props.onSectionClick] - Callback when a section is clicked
  */
-const MultiTimeInput = ({
+const MultiTimeInput = forwardRef(({
     sections = ['hh'],
-    values = { hh: '', mm: '', ss: '' },
+    values,
     activeSection = 'hh',
     bgcolor = 'white',
     disabled = false,
     onSectionClick,
-}) => {
+    ...otherProps
+}, ref) => {
+    // Determine the value for a given section
+    const getSectionValue = (type) => {
+        if (typeof values === 'string') return values;
+        return values?.[type] || '';
+    };
+
     const renderSection = (type, index) => {
         const isActive = activeSection === type;
-        const value = values[type] || '';
+        const sectionValue = getSectionValue(type);
         
         return (
             <React.Fragment key={type}>
@@ -39,7 +46,11 @@ const MultiTimeInput = ({
                     </Typography>
                 )}
                 <TextField
-                    value={value}
+                    // Only attach the ref to the first/only input if multiple sections exist,
+                    // or to the single input if only one exists.
+                    // ClockQuestion expects the ref on the TextField to find the input element.
+                    ref={index === 0 ? ref : undefined}
+                    value={sectionValue}
                     onClick={() => onSectionClick?.(type)}
                     disabled={disabled}
                     inputProps={{
@@ -55,7 +66,7 @@ const MultiTimeInput = ({
                     sx={{
                         width: 80,
                         '& .MuiOutlinedInput-root': {
-                            bgcolor: isActive ? '#e3f2fd' : bgcolor,
+                            bgcolor,
                             transition: 'background-color 0.5s ease',
                             '& fieldset': {
                                 borderColor: isActive ? 'primary.main' : undefined,
@@ -63,6 +74,7 @@ const MultiTimeInput = ({
                             },
                         },
                     }}
+                    {...otherProps}
                 />
             </React.Fragment>
         );
@@ -73,6 +85,8 @@ const MultiTimeInput = ({
             {sections.map((section, index) => renderSection(section, index))}
         </Box>
     );
-};
+});
+
+MultiTimeInput.displayName = 'MultiTimeInput';
 
 export default MultiTimeInput;

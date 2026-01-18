@@ -4,7 +4,7 @@ import { Box } from '@mui/material';
 import StyledClock from './StyledClock';
 import useClockQuestion from './useClockQuestion';
 import NumericKeyboard from '../../components/keyboards/NumericKeyboard';
-import TimeInput from './TimeInput';
+import MultiTimeInput from './MultiTimeInput';
 
 /* =========================
    HOUR VALIDATION + NORMALIZATION
@@ -177,16 +177,16 @@ function ClockQuestion({ progressRef }) {
                         transition: 'opacity 250ms ease, transform 250ms ease',
                     }}
                 >
-                    <Box display="flex" flexDirection="column" alignItems="center" gap={3}>
-                        <Box display="flex" alignItems="center" justifyContent="center" gap={2} mb={2}>
-                            <TimeInput
-                                ref={inputRef}
-                                value={input}
-                                bgcolor={inputBg}
-                                disabled={feedback !== 'neutral'}
-                            />
+                        <Box display="flex" flexDirection="column" alignItems="center" gap={3}>
+                            <Box display="flex" alignItems="center" justifyContent="center" gap={2} mb={2}>
+                                <MultiTimeInput
+                                    ref={inputRef}
+                                    values={input}
+                                    bgcolor={inputBg}
+                                    disabled={feedback !== 'neutral'}
+                                />
+                            </Box>
                         </Box>
-                    </Box>
                 </Box>
 
                 <NumericKeyboard
