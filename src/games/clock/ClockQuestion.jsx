@@ -27,6 +27,7 @@ function ClockQuestion({ config, progressRef }) {
         minHour: 1,
         maxHour: 12,
         includeMinutes: strategy.includeMinutesInClock,
+        minuteStep: strategy.minuteStep || 5,
         onQuestionGenerated: () => {
             setInputs({ hh: '', mm: '' });
             setActiveSection('hh'); // Always reset to first section

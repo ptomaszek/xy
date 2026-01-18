@@ -66,7 +66,7 @@ const gameConfig = {
                 id: 'hours',
                 levels: [
                     { type: 'full-hours' },
-                    { type: 'hours-minutes' },
+                    { type: 'hours-minutes-5' },
                 ]
             }
         ],

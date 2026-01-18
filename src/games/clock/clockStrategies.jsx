@@ -57,30 +57,22 @@ export const CLOCK_STRATEGIES = {
         }
     },
 
-    'hours-minutes': {
+    'hours-minutes-5': {
         sections: ['hh', 'mm'],
         includeMinutesInClock: true,
-
+        minuteStep: 5, // Default step
         validateInput: (val, section) => {
-            if (section === 'hh') {
-                // Allow 0-24 for standard digital time input
-                return isValidInputRange(val, 0, 24);
-            }
-            if (section === 'mm') {
-                // Minutes are always 0-59
-                return isValidInputRange(val, 0, 59);
-            }
+            if (section === 'hh') return isValidInputRange(val, 0, 24);
+            if (section === 'mm') return isValidInputRange(val, 0, 59);
             return true;
         },
 
         isCorrect: (values, correctTime) => {
             const userH = parseInt(values.hh, 10);
             const userM = parseInt(values.mm, 10);
-
-            // Reuses the hour logic (checking 12h/24h) AND requires exact minute match
             return isCorrectHourAnswer(userH, correctTime.hour) && userM === correctTime.minute;
         }
-    }
+    },
 };
 
 export const getStrategy = (type) => {
